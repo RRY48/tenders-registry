@@ -4,41 +4,46 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Реестр тендеров</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f4f6f9;--card:#fff;--accent:#1f4e79;--border:#d0d7de}
+:root{--red:#E4003A;--black:#3C3C3B;--blue:#169FDB;--green:#00A984;--yellow:#FBBB21;--purple:#9373B1;--pink:#F39DB1;--gray:#DADADA;--bg:#FAFAFA;--card:#FFFFFF;--border:#ECECEC}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:#222;padding:16px}
+body{font-family:'Montserrat','Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--black);padding:16px}
 .wrap{max-width:1800px;margin:0 auto}
-h1{color:var(--accent);font-size:22px}
-.sub{color:#777;font-size:13px;margin-bottom:12px}
-.toolbar{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
-.toolbar input[type=text]{padding:7px 10px;border:1px solid var(--border);border-radius:6px;flex:1;min-width:180px}
-.toolbar select{padding:6px;border:1px solid var(--border);border-radius:6px}
-.btn{padding:7px 12px;border:0;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;font-size:13px}
-.btn.green{background:#5cb85c}.btn.gray{background:#6c757d}.btn.blue{background:#337ab7}
-.count{font-size:13px;color:#555;margin-left:auto}
-.form{display:none;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px}
+h1{color:var(--red);font-size:22px;font-weight:800;letter-spacing:1px}
+.sub{color:#999;font-size:13px;margin-bottom:12px}
+.toolbar{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.toolbar input[type=text]{padding:7px 12px;border:1px solid var(--border);border-radius:8px;flex:1;min-width:180px;font-family:inherit;font-size:13px}
+.toolbar select{padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px}
+.btn{padding:7px 14px;border:0;border-radius:8px;background:var(--red);color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn.green{background:var(--green)}.btn.gray{background:#B5B5B5}.btn.blue{background:var(--blue)}
+.count{font-size:13px;color:#999;margin-left:auto}
+.form{display:none;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .form.open{display:block}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
-label{font-size:12px;color:#555;display:block}
-input,select,textarea{width:100%;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:13px}
+label{font-size:11px;color:#999;display:block;font-weight:500}
+input,select,textarea{width:100%;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit}
 textarea{min-height:50px}
 .actions{margin-top:10px;display:flex;gap:8px}
-table{width:100%;border-collapse:collapse;background:var(--card);border-radius:8px;overflow:hidden;font-size:12px}
-th{background:var(--accent);color:#fff;text-align:left;padding:8px;position:sticky;top:0;cursor:pointer;white-space:nowrap}
-td{padding:6px 8px;border-bottom:1px solid #eef1f4;vertical-align:top}
-tr:hover{background:#f0f6ff}
-td.acts{visibility:hidden;white-space:nowrap}
-tr:hover td.acts{visibility:visible}
-.soon{color:#d9534f;font-weight:700}
-.tag{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px}
-.tag.gray{background:#eee;color:#555}.tag.green{background:#dff0d8;color:#3c763d}
-.tag.red{background:#f2dede;color:#a94442}.tag.or{background:#fcf8e3;color:#8a6d3b}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:10px;overflow:hidden;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+th{background:var(--red);color:#fff;text-align:left;padding:8px;position:sticky;top:0;cursor:pointer;white-space:nowrap;font-weight:600}
+td{padding:6px 8px;border-bottom:1px solid #F5F5F5;vertical-align:top}
+tr:hover{background:#FFF5F7}
+.soon{color:var(--red);font-weight:700}
+.tag{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:500}
+.tag.gray{background:#F0F0F0;color:#777}.tag.green{background:#E6F7F2;color:var(--green)}
+.tag.red{background:#FDE8EE;color:var(--red)}.tag.or{background:#FFF8E1;color:#F0A500}
 .stats{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap}
-.stat{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;min-width:140px}
-.stat .n{font-size:22px;font-weight:700;color:var(--accent)}
-.stat .l{font-size:12px;color:#777}
-.empty{padding:30px;text-align:center;color:#888}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 16px;flex:1;min-width:140px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.stat .n{font-size:22px;font-weight:800;color:var(--red)}
+.stat .l{font-size:12px;color:#999}
+.empty{padding:30px;text-align:center;color:#B5B5B5;font-weight:500}
+/* Контекстное меню у курсора */
+#ctx{display:none;position:fixed;z-index:1000;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);padding:5px;min-width:160px}
+#ctx button{display:block;width:100%;text-align:left;padding:8px 12px;border:0;background:none;cursor:pointer;font-family:inherit;font-size:13px;color:var(--black);border-radius:6px}
+#ctx button:hover{background:#FFF5F7;color:var(--red)}
+#ctx .sep{border-top:1px solid var(--border);margin:4px 0}
 </style>
 </head>
 <body>
@@ -59,7 +64,7 @@ tr:hover td.acts{visibility:visible}
 </div>
 <div class="form" id="form">
   <div class="grid">
-    <div><label>Дата</label><input id="nDate" type="date" onchange="setDateLabel()"><input type="text" id="nDateLbl" readonly style="background:#f0f0f0;margin-top:2px"></div>
+    <div><label>Дата</label><input id="nDate" type="date" onchange="setDateLabel()"><input type="text" id="nDateLbl" readonly style="background:#F8F8F8;margin-top:2px"></div>
     <div><label>№ лида</label><input id="nLead"></div>
     <div><label>Название *</label><input id="nName"></div>
     <div><label>Заказчик</label><input id="nCust"></div>
@@ -96,8 +101,12 @@ tr:hover td.acts{visibility:visible}
 <table id="tab"></table>
 <div class="empty" id="emp">Загрузка…</div>
 </div>
+<div id="ctx">
+  <button onclick="ctxEdit()">✎ &nbsp;Редактировать</button>
+  <button onclick="ctxDel()">✕ &nbsp;Удалить</button>
+</div>
 <script>
-var data=[], KEY='tenders2026_web', DATA_VER='2026.6', editId=null;
+var data=[], KEY='tenders2026_web', DATA_VER='2026.7', editId=null, ctxId=null;
 var FIELDS=['№ лида','Ссылка','Название','Заказчик','Регион','Закон / площадка','Тип процедуры','Дата завершения приема заявок','НМЦ','Обеспечение заявки','Обеспечение процедуры','Наша начальная ставка','Наша конечная ставка','% влияния цены решение','Подались да/нет (нет)','Подозрительный да/нет (нет)','Основные технологии','Срок реализации','Типы причины неучастия в тендере','Описание причины несоответствия нас и тендера','Делали концепцию или нет','Задавали вопросы или нет','Получили ответы на вопросы или нет','Общение только через площадку','Общение по email / телефону','Делалась ли оценка (командой / грубая)','Контактные данные','Критерии влияния на решение с %','Комметарии','Итоги (промежуточные и финальные)'];
 var F2I={'№ лида':'nLead','Ссылка':'nHref','Название':'nName','Заказчик':'nCust','Регион':'nReg','Закон / площадка':'nLaw','Тип процедуры':'nType','Дата завершения приема заявок':'nDl','НМЦ':'nNmt','Обеспечение заявки':'nSecBid','Обеспечение процедуры':'nSecContr','Наша начальная ставка':'nStartBid','Наша конечная ставка':'nFinalBid','% влияния цены решение':'nPricePercent','Подались да/нет (нет)':'nSub','Подозрительный да/нет (нет)':'nSus','Основные технологии':'nTech','Срок реализации':'nTerm','Типы причины неучастия в тендере':'nReasonType','Описание причины несоответствия нас и тендера':'nReasonDesc','Делали концепцию или нет':'nConcept','Задавали вопросы или нет':'nQAsked','Получили ответы на вопросы или нет':'nQAns','Общение только через площадку':'nOnlyPlatform','Общение по email / телефону':'nEmailPhone','Делалась ли оценка (командой / грубая)':'nEval','Контактные данные':'nContact','Критерии влияния на решение с %':'nCriteria','Комметарии':'nComm','Итоги (промежуточные и финальные)':'nHist'};
 var SEL_FIELDS=['Подались да/нет (нет)','Подозрительный да/нет (нет)','Делали концепцию или нет','Задавали вопросы или нет','Получили ответы на вопросы или нет','Общение только через площадку','Общение по email / телефону','Делалась ли оценка (командой / грубая)'];
@@ -111,8 +120,13 @@ function render(){draw()}
 function filt(){var q=(document.getElementById('q').value||'').toLowerCase(),dt=document.getElementById('fDate').value,la=document.getElementById('fLay').value,su=document.getElementById('fSub').value,sp=document.getElementById('fSus').value;return data.filter(function(d){if(q){var t=((d['Название']||'')+' '+(d['Заказчик']||'')+' '+(d['Ссылка']||'')).toLowerCase();if(t.indexOf(q)<0)return false}if(dt){var dm=(d['Дата']||'').match(/(\d{2})\.(\d{4})/);if(!dm||(dm[1]+'.'+dm[2])!==dt)return false}if(la&&d['Закон / площадка']!==la)return false;if(su&&(d['Подались да/нет (нет)']||'')!==su)return false;if(sp&&(d['Подозрительный да/нет (нет)']||'')!==sp)return false;return true})}
 function dl(s){if(!s)return 999;var m=s.match(/(\d{2})\.(\d{2})\.(\d{4})/);if(!m)return 999;var d=new Date(+m[3],+m[2]-1,+m[1]);return Math.ceil((d-new Date())/86400000)}
 function esc(s){var t=document.createElement('div');t.textContent=s;return t.innerHTML}
-function draw(){var r=filt(),h=['Дата','Лид','Ссылка','Название','Заказчик','Регион','Площадка','Тип','Дедлайн','НМЦ','Обесп. заявки','Обесп. проц.','Нач. ставка','Кон. ставка','% цены','Подались','Подозр.','Технологии','Срок реал.','Причина','Несоотв.','Концепция','Вопросы','Ответы','Площадка-общ.','Email/тел.','Оценка','Контакты','Критерии %','Коммент.','Итоги',''];document.getElementById('stats').innerHTML='<div class="stat"><div class="n">'+data.length+'</div><div class="l">Всего</div></div><div class="stat"><div class="n">'+data.filter(function(d){return d['Подались да/нет (нет)']=='да'}).length+'</div><div class="l">Подались</div></div><div class="stat"><div class="n">'+data.filter(function(d){return d['Подозрительный да/нет (нет)']=='да'}).length+'</div><div class="l">Подозрительные</div></div>';document.getElementById('cnt').textContent='Показано: '+r.length+' из '+data.length;document.getElementById('emp').style.display=r.length?'none':'block';document.getElementById('tab').innerHTML='<tr>'+h.map(function(x,i){return '<th onclick="sort('+i+')">'+esc(x)+'</th>'}).join('')+'</tr>';r.forEach(function(d){var dlT=d['Дата завершения приема заявок']?d['Дата завершения приема заявок'].split(' ')[0]:'';var dc=(dl(dlT)>=0&&dl(dlT)<=3)?' class="soon"':'';var sb=(d['Подались да/нет (нет)']||'')=='да'?'<span class="tag green">да</span>':((d['Подались да/нет (нет)']||'')=='нет'?'<span class="tag red">нет</span>':'<span class="tag or">не ясно</span>');var sp=(d['Подозрительный да/нет (нет)']||'')=='да'?'<span class="tag red">да</span>':'<span class="tag gray">-</span>';var lk=(d['Ссылка']||'').indexOf('http')==0?' <a href="'+esc(d['Ссылка'])+'" target="_blank">link</a>':'';document.getElementById('tab').insertAdjacentHTML('beforeend','<tr><td>'+esc(d['Дата']||'')+'</td><td>'+esc(d['№ лида']||'')+'</td><td>'+lk+'</td><td><b>'+esc(d['Название']||'')+'</b></td><td>'+esc(d['Заказчик']||'')+'</td><td>'+esc(d['Регион']||'')+'</td><td>'+esc(d['Закон / площадка']||'')+'</td><td>'+esc(d['Тип процедуры']||'')+'</td><td'+dc+'>'+esc(dlT)+'</td><td>'+esc(d['НМЦ']||'')+'</td><td>'+esc(d['Обеспечение заявки']||'')+'</td><td>'+esc(d['Обеспечение процедуры']||'')+'</td><td>'+esc(d['Наша начальная ставка']||'')+'</td><td>'+esc(d['Наша конечная ставка']||'')+'</td><td>'+esc(d['% влияния цены решение']||'')+'</td><td>'+sb+'</td><td>'+sp+'</td><td>'+esc(d['Основные технологии']||'')+'</td><td>'+esc(d['Срок реализации']||'')+'</td><td>'+esc(d['Типы причины неучастия в тендере']||'')+'</td><td>'+esc(d['Описание причины несоответствия нас и тендера']||'')+'</td><td>'+esc(d['Делали концепцию или нет']||'')+'</td><td>'+esc(d['Задавали вопросы или нет']||'')+'</td><td>'+esc(d['Получили ответы на вопросы или нет']||'')+'</td><td>'+esc(d['Общение только через площадку']||'')+'</td><td>'+esc(d['Общение по email / телефону']||'')+'</td><td>'+esc(d['Делалась ли оценка (командой / грубая)']||'')+'</td><td>'+esc(d['Контактные данные']||'')+'</td><td>'+esc(d['Критерии влияния на решение с %']||'')+'</td><td>'+esc((d['Комметарии']||'').slice(0,60))+'</td><td>'+esc(d['Итоги (промежуточные и финальные)']||'')+'</td><td class="acts"><button class="btn blue" onclick="edit('+d.id+')">✎</button> <button class="btn gray" onclick="del('+d.id+')">x</button></td></tr>')})}
+function draw(){var r=filt(),h=['Дата','Лид','Ссылка','Название','Заказчик','Регион','Площадка','Тип','Дедлайн','НМЦ','Обесп. заявки','Обесп. проц.','Нач. ставка','Кон. ставка','% цены','Подались','Подозр.','Технологии','Срок реал.','Причина','Несоотв.','Концепция','Вопросы','Ответы','Площадка-общ.','Email/тел.','Оценка','Контакты','Критерии %','Коммент.','Итоги',''];document.getElementById('stats').innerHTML='<div class="stat"><div class="n">'+data.length+'</div><div class="l">Всего</div></div><div class="stat"><div class="n">'+data.filter(function(d){return d['Подались да/нет (нет)']=='да'}).length+'</div><div class="l">Подались</div></div><div class="stat"><div class="n">'+data.filter(function(d){return d['Подозрительный да/нет (нет)']=='да'}).length+'</div><div class="l">Подозрительные</div></div>';document.getElementById('cnt').textContent='Показано: '+r.length+' из '+data.length;document.getElementById('emp').style.display=r.length?'none':'block';document.getElementById('tab').innerHTML='<tr>'+h.map(function(x,i){return '<th onclick="sort('+i+')">'+esc(x)+'</th>'}).join('')+'</tr>';r.forEach(function(d){var dlT=d['Дата завершения приема заявок']?d['Дата завершения приема заявок'].split(' ')[0]:'';var dc=(dl(dlT)>=0&&dl(dlT)<=3)?' class="soon"':'';var sb=(d['Подались да/нет (нет)']||'')=='да'?'<span class="tag green">да</span>':((d['Подались да/нет (нет)']||'')=='нет'?'<span class="tag red">нет</span>':'<span class="tag or">не ясно</span>');var sp=(d['Подозрительный да/нет (нет)']||'')=='да'?'<span class="tag red">да</span>':'<span class="tag gray">-</span>';var lk=(d['Ссылка']||'').indexOf('http')==0?' <a href="'+esc(d['Ссылка'])+'" target="_blank">link</a>':'';document.getElementById('tab').insertAdjacentHTML('beforeend','<tr onclick="rowMenu(event,'+d.id+')"><td>'+esc(d['Дата']||'')+'</td><td>'+esc(d['№ лида']||'')+'</td><td>'+lk+'</td><td><b>'+esc(d['Название']||'')+'</b></td><td>'+esc(d['Заказчик']||'')+'</td><td>'+esc(d['Регион']||'')+'</td><td>'+esc(d['Закон / площадка']||'')+'</td><td>'+esc(d['Тип процедуры']||'')+'</td><td'+dc+'>'+esc(dlT)+'</td><td>'+esc(d['НМЦ']||'')+'</td><td>'+esc(d['Обеспечение заявки']||'')+'</td><td>'+esc(d['Обеспечение процедуры']||'')+'</td><td>'+esc(d['Наша начальная ставка']||'')+'</td><td>'+esc(d['Наша конечная ставка']||'')+'</td><td>'+esc(d['% влияния цены решение']||'')+'</td><td>'+sb+'</td><td>'+sp+'</td><td>'+esc(d['Основные технологии']||'')+'</td><td>'+esc(d['Срок реализации']||'')+'</td><td>'+esc(d['Типы причины неучастия в тендере']||'')+'</td><td>'+esc(d['Описание причины несоответствия нас и тендера']||'')+'</td><td>'+esc(d['Делали концепцию или нет']||'')+'</td><td>'+esc(d['Задавали вопросы или нет']||'')+'</td><td>'+esc(d['Получили ответы на вопросы или нет']||'')+'</td><td>'+esc(d['Общение только через площадку']||'')+'</td><td>'+esc(d['Общение по email / телефону']||'')+'</td><td>'+esc(d['Делалась ли оценка (командой / грубая)']||'')+'</td><td>'+esc(d['Контактные данные']||'')+'</td><td>'+esc(d['Критерии влияния на решение с %']||'')+'</td><td>'+esc((d['Комметарии']||'').slice(0,60))+'</td><td>'+esc(d['Итоги (промежуточные и финальные)']||'')+'</td><td></td></tr>')})}
 function sort(i){var k=['Дата','№ лида','Ссылка','Название','Заказчик','Регион','Закон / площадка','Тип процедуры','Дата завершения приема заявок','НМЦ','Обеспечение заявки','Обеспечение процедуры','Наша начальная ставка','Наша конечная ставка','% влияния цены решение','Подались да/нет (нет)','Подозрительный да/нет (нет)','Основные технологии','Срок реализации','Типы причины неучастия в тендере','Описание причины несоответствия нас и тендера','Делали концепцию или нет','Задавали вопросы или нет','Получили ответы на вопросы или нет','Общение только через площадку','Общение по email / телефону','Делалась ли оценка (командой / грубая)','Контактные данные','Критерии влияния на решение с %','Комметарии','Итоги (промежуточные и финальные)'][i];data.sort(function(a,b){return String(a[k]||'').localeCompare(String(b[k]||''),'ru')});save();draw()}
+/* Контекстное меню у курсора */
+function rowMenu(e,id){e.preventDefault();ctxId=id;var m=document.getElementById('ctx');m.style.display='block';var x=e.clientX,y=e.clientY;var mw=m.offsetWidth,mh=m.offsetHeight;if(x+mw>window.innerWidth)x-=mw;if(y+mh>window.innerHeight)y-=mh;m.style.left=x+'px';m.style.top=y+'px'}
+function ctxEdit(){document.getElementById('ctx').style.display='none';if(ctxId!=null)edit(ctxId)}
+function ctxDel(){document.getElementById('ctx').style.display='none';if(ctxId!=null)del(ctxId)}
+document.addEventListener('click',function(e){if(!e.target.closest('#ctx')&&!e.target.closest('#tab tr'))document.getElementById('ctx').style.display='none'});
 function del(id){if(!confirm('Удалить?'))return;data=data.filter(function(d){return d.id!==id});save();draw()}
 function tgl(){document.getElementById('form').classList.toggle('open');if(!document.getElementById('form').classList.contains('open')){editId=null;document.getElementById('btnAdd').style.display='';document.getElementById('btnUpd').style.display='none'}}
 function g(id){return document.getElementById(id).value.trim()}
