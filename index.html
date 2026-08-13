@@ -99,6 +99,18 @@ body:has(#showAll:checked) #tab .hidden-col{display:table-cell}
 .tbl-hthumb{position:absolute;top:2px;bottom:2px;left:0;width:80px;min-width:40px;background:#A6A6A6;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1);cursor:grab;transition:background .15s}
 .tbl-hthumb:hover{background:#888888}
 .tbl-hscroll.dragging .tbl-hthumb{background:#6E6E6E;cursor:grabbing}
+/* Полоса закрепляется внизу видимой части экрана (не нужно докручивать до конца списка) */
+.tbl-hscroll{position:sticky;bottom:0;z-index:50;box-shadow:0 -3px 8px rgba(0,0,0,.12)}
+/* Множественный фильтр «Площадки» (чекбоксы + сброс) */
+#fLay{display:none}
+#layWrap{position:relative;display:inline-block}
+#layBtn{white-space:nowrap}
+#layPanel{display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:200;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:8px;min-width:240px;max-height:280px;overflow-y:auto}
+#layPanel.open{display:block}
+#layPanel .lay-clear{display:flex;align-items:center;gap:7px;padding:6px 8px;border-bottom:1px solid var(--border);margin-bottom:6px;font-size:13px;font-weight:700;cursor:pointer;color:var(--red)}
+#layPanel label{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--black);padding:3px 8px;cursor:pointer;font-weight:500;border-radius:6px}
+#layPanel label:hover{background:#FFF5F7}
+#layPanel input{width:auto;margin:0}
 /* Клик по шапке таблицы отключен — сортировка только через выпадающий список */
 #tab th{cursor:default!important}
 /* Страница не скроллится по горизонтали — весь горизонтальный скролл остаётся внутри таблицы */
@@ -225,7 +237,6 @@ html,body{max-width:100%;overflow-x:hidden}
     <select id="sortBy">
       <option value="date-desc">Дата (сначала новые)</option>
       <option value="date-asc">Дата (хронология: старые сверху)</option>
-      <option value="none">Убрать сортировку (исходный порядок)</option>
       <option value="deadline-asc">Дедлайн (сначала срочные)</option>
       <option value="nmc-desc">НМЦ (сначала дорогие)</option>
       <option value="status">Статус участия (активные сверху)</option>
@@ -311,9 +322,6 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
   var HIDDEN=[1,2,10,11,12,13,14,18,20,21,22,23,24,25,26,27,28];
   /* Соответствие режима сортировки номеру колонки */
   var SORT_COL={'date-desc':0,'date-asc':0,'deadline-asc':8,'nmc-desc':9,'status':15,'tech':17,'reason':19};
-  /* Исходный порядок строк (для режима «Убрать сортировку») */
-  var origIds=null;
-  function snapshotOrder(){if(origIds)return;var trs=document.querySelectorAll('#tab tr'),ids=[];for(var i=0;i<trs.length;i++){var t=trs[i];if(t.querySelector('th'))continue;var m=(t.getAttribute('onclick')||'').match(/rowMenu\(event,(\d+)\)/);if(m)ids.push(m[1])}if(ids.length)origIds=ids}
   function isoT(s){var m=String(s||'').match(/(\d{2})\.(\d{2})\.(\d{4})/);return m?m[3]+'-'+m[2]+'-'+m[1]:''}
   function daysTo(s){if(!s)return 999;var m=s.match(/(\d{2})\.(\d{2})\.(\d{4})/);if(!m)return 999;var d=new Date(+m[3],+m[2]-1,+m[1]);return Math.ceil((d-new Date())/86400000)}
   function isoDays(s){if(!s)return 999;var p=s.split('-');if(p.length<3)return 999;var d=new Date(+p[0],+p[1]-1,+p[2]);return Math.ceil((d-new Date())/86400000)}
@@ -349,26 +357,15 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
     function grp(diff){if(diff<0)return 0;if(diff<=1)return 1;if(diff<=7)return 2;return 3}
     function stP(s){if(s==='да')return 0;if(s==='не ясно')return 1;if(!s)return 2;return 3}
     function alpha(a,b){if(!a&&!b)return 0;if(!a)return 1;if(!b)return -1;return String(a).localeCompare(String(b),'ru')}
-    if(mode==='none'){
-      if(origIds&&origIds.length){
-        var byId={};
-        rows.forEach(function(t){var m=(t.getAttribute('onclick')||'').match(/rowMenu\(event,(\d+)\)/);if(m)byId[m[1]]=t});
-        var ord=[];
-        origIds.forEach(function(id){if(byId[id]){ord.push(byId[id]);delete byId[id]}});
-        Object.keys(byId).forEach(function(k){ord.push(byId[k])});
-        rows=ord;
-      }
-    }else{
       if(mode==='date-desc'){cmp=function(a,b){var x=val(a,'date'),y=val(b,'date');if(x&&!y)return -1;if(!x&&y)return 1;return y.localeCompare(x)}}
       else if(mode==='date-asc'){cmp=function(a,b){var x=val(a,'date'),y=val(b,'date');if(!x&&!y)return 0;if(!x)return 1;if(!y)return -1;return x.localeCompare(y)}}
-      else if(mode==='deadline-asc'){cmp=function(a,b){var da=isoDays(val(a,'deadline')),db=isoDays(val(b,'deadline'));var ga=grp(da),gb=grp(db);if(ga!==gb)return ga-gb;return da-db}}
+      else if(mode==='deadline-asc'){cmp=function(a,b){var da=isoDays(val(a,'deadline')),db=isoDays(val(b,'deadline'));return Math.abs(da)-Math.abs(db)}}
       else if(mode==='nmc-desc'){cmp=function(a,b){return parseNum(val(b,'nmc'))-parseNum(val(a,'nmc'))}}
       else if(mode==='status'){cmp=function(a,b){return stP(val(a,'status'))-stP(val(b,'status'))}}
       else if(mode==='tech'){cmp=function(a,b){return alpha(val(a,'tech'),val(b,'tech'))}}
       else if(mode==='reason'){cmp=function(a,b){return alpha(val(a,'reason'),val(b,'reason'))}}
       else{return}
       rows.sort(cmp);
-    }
     var frag=document.createDocumentFragment();
     head.forEach(function(t){frag.appendChild(t)});
     rows.forEach(function(t){frag.appendChild(t)});
@@ -429,6 +426,84 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
   if(harrL)harrL.addEventListener('click',function(){if(sc){sc.scrollLeft-=80;syncHScroll()}});
   if(harrR)harrR.addEventListener('click',function(){if(sc){sc.scrollLeft+=80;syncHScroll()}});
   window.addEventListener('resize',syncHScroll);
+
+  /* --- 5. Множественный фильтр «Площадки» (чекбоксы + сброс всех) --- */
+  var laySel=[];
+  try{laySel=JSON.parse(localStorage.getItem(KEY+'_lays')||'[]')}catch(e){laySel=[]}
+  if(!Array.isArray(laySel))laySel=[];
+  var layWrap=document.createElement('span');layWrap.id='layWrap';
+  var layBtn=document.createElement('button');layBtn.type='button';layBtn.className='btn gray';layBtn.id='layBtn';
+  var layPanel=document.createElement('div');layPanel.id='layPanel';
+  var layClear=document.createElement('div');layClear.className='lay-clear';
+  var layClearChk=document.createElement('input');layClearChk.type='checkbox';
+  var layClearTxt=document.createElement('span');layClearTxt.textContent='Сбросить все';
+  layClear.appendChild(layClearChk);layClear.appendChild(layClearTxt);
+  layPanel.appendChild(layClear);
+  layWrap.appendChild(layBtn);layWrap.appendChild(layPanel);
+  var fLayEl=document.getElementById('fLay');
+  if(fLayEl&&fLayEl.parentNode){fLayEl.parentNode.insertBefore(layWrap,fLayEl.nextSibling)}
+  function buildLayPanel(){
+    var vals=[];var seen={};
+    if(data){data.forEach(function(d){var v=(d['Закон / площадка']||'').trim();if(v&&!seen[v]){seen[v]=1;vals.push(v)}})}
+    vals.sort(function(a,b){return a.localeCompare(b,'ru')});
+    layPanel.querySelectorAll('label').forEach(function(l){l.remove()});
+    vals.forEach(function(v){
+      var lb=document.createElement('label');
+      var cb=document.createElement('input');cb.type='checkbox';cb.value=v;
+      if(laySel.indexOf(v)>=0)cb.checked=true;
+      cb.addEventListener('change',function(){
+        if(cb.checked){if(laySel.indexOf(v)<0)laySel.push(v)}
+        else{laySel=laySel.filter(function(x){return x!==v})}
+        try{localStorage.setItem(KEY+'_lays',JSON.stringify(laySel))}catch(e){}
+        layClearChk.checked=false;
+        updateLayLabel();
+        if(typeof render==='function')render();
+      });
+      lb.appendChild(cb);lb.appendChild(document.createTextNode(v));
+      layPanel.appendChild(lb);
+    });
+  }
+  function updateLayLabel(){
+    if(!layBtn)return;
+    layBtn.innerHTML=laySel.length?('Площадки: <b>'+laySel.length+'</b> ▾'):'Площадки: <b>все</b> ▾';
+  }
+  if(layBtn)layBtn.addEventListener('click',function(e){e.stopPropagation();layPanel.classList.toggle('open');buildLayPanel()});
+  if(layClear)layClear.addEventListener('click',function(e){e.stopPropagation();laySel=[];try{localStorage.setItem(KEY+'_lays','[]')}catch(e){};updateLayLabel();buildLayPanel();if(typeof render==='function')render()});
+  document.addEventListener('click',function(e){if(layPanel&&!e.target.closest('#layWrap'))layPanel.classList.remove('open')});
+
+  /* --- 5a. Фильтр «Подача» всегда с префиксом; «Подозрительные» → «Причина неучастия» --- */
+  function relabelFilters(){
+    var sub=document.getElementById('fSub');
+    if(sub&&sub.options.length>=4){
+      sub.options[0].text='Подача: все';sub.options[1].text='Подача: да';sub.options[2].text='Подача: нет';sub.options[3].text='Подача: не ясно';
+    }
+    var sus=document.getElementById('fSus');
+    if(sus){
+      var cur=sus.value;
+      var rv=[];var rseen={};
+      if(data){data.forEach(function(d){var v=(d['Типы причины неучастия в тендере']||'').trim();if(v&&!rseen[v]){rseen[v]=1;rv.push(v)}})}
+      rv.sort(function(a,b){return a.localeCompare(b,'ru')});
+      sus.innerHTML='<option value="">Причина: все</option>';
+      rv.forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;sus.appendChild(o)});
+      if(cur)sus.value=cur;
+    }
+  }
+
+  /* --- 5b. Переопределение filt(): мультивыбор площадок + причина неучастия (остальная логика та же) --- */
+  window.filt=function(){
+    var q=(document.getElementById('q').value||'').toLowerCase();
+    var dt=document.getElementById('fDate').value;
+    var su=document.getElementById('fSub').value;
+    var sp=document.getElementById('fSus').value;
+    return data.filter(function(d){
+      if(q){var t=((d['Название']||'')+' '+(d['Заказчик']||'')+' '+(d['Ссылка']||'')).toLowerCase();if(t.indexOf(q)<0)return false}
+      if(dt){var dm=(d['Дата']||'').match(/(\d{2})\.(\d{4})/);if(!dm||(dm[1]+'.'+dm[2])!==dt)return false}
+      if(laySel&&laySel.length&&laySel.indexOf(d['Закон / площадка']||'')<0)return false;
+      if(su&&(d['Подались да/нет (нет)']||'')!==su)return false;
+      if(sp&&((d['Типы причины неучастия в тендере']||'').toLowerCase().indexOf(sp.toLowerCase())<0))return false;
+      return true;
+    });
+  };
 
   /* --- 3. Заполнение фильтра «Площадка», если он пуст --- */
   function fixPlatformFilter(){
@@ -496,7 +571,6 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
         if(tds[29]&&(rec['Комметарии']||'').trim())tds[29].setAttribute('title',rec['Комметарии']);
       }
     }
-    snapshotOrder();
   }
 
   /* --- Обработка перерисовок: первичная сортировка и повторное применение выбранной --- */
@@ -515,6 +589,8 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
   function safeRun(){
     try{enhance()}catch(e){}
     try{fixPlatformFilter()}catch(e){}
+    try{relabelFilters()}catch(e){}
+    try{updateLayLabel()}catch(e){}
     try{afterRender()}catch(e){}
     if(sc)sc.scrollLeft=0;
     try{syncHScroll()}catch(e){}
