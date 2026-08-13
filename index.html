@@ -84,7 +84,7 @@ body:has(#showAll:checked) #tab .hidden-col{display:table-cell}
 
 /* 4. Скролл-обёртка и ширина таблицы (ширина по содержимому, чтобы скролл работал).
        Первая колонка НЕ закрепляется при горизонтальном скролле */
-.tbl-scroll{overflow-x:auto;overflow-y:hidden;border:1px solid var(--border);border-radius:10px;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.04);-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin}
+.tbl-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:10px;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.04);-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin}
 .tbl-scroll::-webkit-scrollbar{height:8px}
 .tbl-scroll::-webkit-scrollbar-track{background:#F3F3F3}
 .tbl-scroll::-webkit-scrollbar-thumb{background:#C9C9C9;border-radius:4px}
@@ -339,18 +339,6 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
     if(ths[ci])ths[ci].classList.add('sorted-col');
   }
   function hasArrow(headerTr){var t=(headerTr&&headerTr.textContent)||'';return t.indexOf('▲')>=0||t.indexOf('▼')>=0}
-
-  /* --- 4. Скролл: колёсико мыши над таблицей двигает столбцы по горизонтали --- */
-  var tblScroll=document.querySelector('.tbl-scroll');
-  if(tblScroll){
-    tblScroll.addEventListener('wheel',function(e){
-      if(e.deltaX!==0)return;
-      if(tblScroll.scrollWidth>tblScroll.clientWidth){
-        e.preventDefault();
-        tblScroll.scrollLeft+=e.deltaY;
-      }
-    },{passive:false});
-  }
 
   /* --- 3. Заполнение фильтра «Площадка», если он пуст --- */
   function fixPlatformFilter(){
