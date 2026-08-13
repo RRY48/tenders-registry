@@ -78,7 +78,7 @@ tr:hover{background:#f0f6ff}
 <script>
 var data=[], KEY='tenders2026_web';
 fetch('data.json').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(x){init(x)}).catch(function(){var s=localStorage.getItem(KEY);if(s){data=JSON.parse(s);draw()}else{document.getElementById('emp').textContent='data.json не найден — используйте импорт'}});
-function init(x){var s=localStorage.getItem(KEY);data=s?JSON.parse(s):x;if(!s)localStorage.setItem(KEY,JSON.stringify(data));fill();draw()}
+function init(x){if(localStorage.getItem(KEY)){var o=JSON.parse(localStorage.getItem(KEY));if(o.length&&o[0]._ver===DATA_VER){data=o;fill();draw();return}}data=x;data.forEach(function(d){d._ver=DATA_VER});save();fill();draw()}
 function save(){localStorage.setItem(KEY,JSON.stringify(data))}
 function fill(){var s=document.getElementById('fLay'),arr=[...new Set(data.map(function(d){return d['Закон / площадка']||'0'}).filter(function(v){return v!='0'})].sort();arr.forEach(function(l){var o=document.createElement('option');o.value=l;o.textContent=l;s.appendChild(o)})}
 function filt(){var q=(document.getElementById('q').value||'').toLowerCase(),la=document.getElementById('fLay').value,su=document.getElementById('fSub').value,sp=document.getElementById('fSus').value;return data.filter(function(d){if(q){var t=((d['Предмет закупки']||'')+' '+(d['Заказчик']||'')+' '+(d['Ссылка']||'')).toLowerCase();if(t.indexOf(q)<0)return false}if(la&&d['Закон / площадка']!==la)return false;if(su&&(d['Подались да/нет']||'')!==su)return false;if(sp&&(d['Подозрительный («под кого-то»)' ]||'')!==sp)return false;return true})}
