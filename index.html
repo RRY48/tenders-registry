@@ -48,6 +48,9 @@ td{padding:6px 8px;border-bottom:1px solid #F5F5F5;vertical-align:top}
 #ctx button{display:block;width:100%;text-align:left;padding:8px 12px;border:0;background:none;cursor:pointer;font-family:inherit;font-size:13px;color:var(--black);border-radius:6px}
 #ctx button:hover{background:#FFF5F7;color:var(--red)}
 #ctx .sep{border-top:1px solid var(--border);margin:4px 0}
+/* Кнопка наверх */
+#toTop{display:none;position:fixed;bottom:24px;right:24px;z-index:999;width:46px;height:46px;border-radius:50%;background:var(--red);color:#fff;border:0;cursor:pointer;font-size:20px;font-family:inherit;font-weight:800;box-shadow:0 4px 12px rgba(228,0,58,.35);transition:opacity .2s}
+#toTop:hover{opacity:.85}
 </style>
 </head>
 <body>
@@ -111,6 +114,7 @@ td{padding:6px 8px;border-bottom:1px solid #F5F5F5;vertical-align:top}
   <button onclick="ctxEdit()">✎ &nbsp;Редактировать</button>
   <button onclick="ctxDel()">✕ &nbsp;Удалить</button>
 </div>
+<button id="toTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Наверх">↑</button>
 <script>
 var data=[], KEY='tenders2026_web', DATA_VER='2026.7', editId=null, ctxId=null;
 var FIELDS=['№ лида','Ссылка','Название','Заказчик','Регион','Закон / площадка','Тип процедуры','Дата завершения приема заявок','НМЦ','Обеспечение заявки','Обеспечение процедуры','Наша начальная ставка','Наша конечная ставка','% влияния цены решение','Подались да/нет (нет)','Подозрительный да/нет (нет)','Основные технологии','Срок реализации','Типы причины неучастия в тендере','Описание причины несоответствия нас и тендера','Делали концепцию или нет','Задавали вопросы или нет','Получили ответы на вопросы или нет','Общение только через площадку','Общение по email / телефону','Делалась ли оценка (командой / грубая)','Контактные данные','Критерии влияния на решение с %','Комметарии','Итоги (промежуточные и финальные)'];
@@ -134,6 +138,7 @@ function rowMenu(e,id){e.preventDefault();ctxId=id;var m=document.getElementById
 function ctxEdit(){document.getElementById('ctx').style.display='none';if(ctxId!=null)edit(ctxId)}
 function ctxDel(){document.getElementById('ctx').style.display='none';if(ctxId!=null)del(ctxId)}
 document.addEventListener('click',function(e){if(!e.target.closest('#ctx'))document.getElementById('ctx').style.display='none'});
+window.addEventListener('scroll',function(){document.getElementById('toTop').style.display=window.scrollY>300?'block':'none'});
 function del(id){if(!confirm('Удалить?'))return;data=data.filter(function(d){return d.id!==id});save();draw()}
 function tgl(){document.getElementById('form').classList.toggle('open');if(!document.getElementById('form').classList.contains('open')){editId=null;document.getElementById('btnAdd').style.display='';document.getElementById('btnUpd').style.display='none'}}
 function g(id){return document.getElementById(id).value.trim()}
