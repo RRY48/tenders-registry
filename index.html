@@ -99,12 +99,12 @@ body:has(#showAll:checked) #tab .hidden-col{display:table-cell}
 .tbl-hthumb{position:absolute;top:2px;bottom:2px;left:0;width:80px;min-width:40px;background:#A6A6A6;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1);cursor:grab;transition:background .15s}
 .tbl-hthumb:hover{background:#888888}
 .tbl-hscroll.dragging .tbl-hthumb{background:#6E6E6E;cursor:grabbing}
-/* Полоса закрепляется внизу видимой части экрана (не нужно докручивать до конца списка) */
-.tbl-hscroll{position:sticky;bottom:0;z-index:50;box-shadow:0 -3px 8px rgba(0,0,0,.12)}
-/* Множественный фильтр «Площадки» (чекбоксы + сброс) */
+/* Полоса всегда внизу видимой части экрана; координаты выставляет JS (position:fixed) */
+.tbl-hscroll{position:fixed;bottom:10px;z-index:9999;box-shadow:0 -4px 12px rgba(0,0,0,.18)}
+/* Множественный фильтр «Площадки»: селект как у остальных фильтров, внутри — чекбоксы */
 #fLay{display:none}
-#layWrap{position:relative;display:inline-block}
-#layBtn{white-space:nowrap}
+#layWrap{position:relative;display:inline-block;z-index:300}
+#laySelect{min-width:180px;cursor:pointer;background:#fff}
 #layPanel{display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:200;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:8px;min-width:240px;max-height:280px;overflow-y:auto}
 #layPanel.open{display:block}
 #layPanel .lay-clear{display:flex;align-items:center;gap:7px;padding:6px 8px;border-bottom:1px solid var(--border);margin-bottom:6px;font-size:13px;font-weight:700;cursor:pointer;color:var(--red)}
@@ -173,8 +173,8 @@ html,body{max-width:100%;overflow-x:hidden}
 
 /* Причина — обрезка до 2-3 слов с многоточием */
 #tab td:nth-child(20){max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* Комментарии — обрезка + подсказка с полным текстом */
-#tab td:nth-child(30){max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Комментарии — максимум 3 строки, остальное скрыто многоточием, полный текст в подсказке */
+#tab td:nth-child(30){max-width:220px;white-space:normal;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
 </style>
 </head>
 <body>
@@ -395,6 +395,7 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
     var cw=sc.clientWidth,sw=sc.scrollWidth;
     if(sw>cw+1){
       hsc.classList.add('on');
+      positionHBar();
       var avail=hbar.clientWidth;
       var thumbW=Math.max(36,Math.round(avail*cw/sw));
       hthumb.style.width=thumbW+'px';
@@ -403,6 +404,18 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
       hthumb.style.left=Math.round(pc*maxL)+'px';
     }else{
       hsc.classList.remove('on');
+      if(hsc)hsc.style.display='none';
+    }
+  }
+  /* Полоса всегда внизу видимой части экрана, независимо от прокрутки страницы */
+  function positionHBar(){
+    if(!hsc)return;
+    if(hsc.classList.contains('on')){
+      hsc.style.width=Math.min(window.innerWidth-24,Math.max(320,sc?sc.offsetWidth:720))+'px';
+      hsc.style.left=Math.max(8,Math.round((window.innerWidth-(hsc.offsetWidth||0))/2))+'px';
+      hsc.style.display='block';
+    }else{
+      hsc.style.display='none';
     }
   }
   var hDragging=false;
@@ -432,7 +445,8 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
   try{laySel=JSON.parse(localStorage.getItem(KEY+'_lays')||'[]')}catch(e){laySel=[]}
   if(!Array.isArray(laySel))laySel=[];
   var layWrap=document.createElement('span');layWrap.id='layWrap';
-  var layBtn=document.createElement('button');layBtn.type='button';layBtn.className='btn gray';layBtn.id='layBtn';
+  var layBtn=document.createElement('select');layBtn.id='laySelect';layBtn.className='lay-select';
+  layBtn.innerHTML='<option>Площадки: все</option>';
   var layPanel=document.createElement('div');layPanel.id='layPanel';
   var layClear=document.createElement('div');layClear.className='lay-clear';
   var layClearChk=document.createElement('input');layClearChk.type='checkbox';
@@ -465,7 +479,7 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
   }
   function updateLayLabel(){
     if(!layBtn)return;
-    layBtn.innerHTML=laySel.length?('Площадки: <b>'+laySel.length+'</b> ▾'):'Площадки: <b>все</b> ▾';
+    layBtn.innerHTML=laySel.length?('<option>Площадки: <b>'+laySel.length+'</b> ▾</option>'):'<option>Площадки: <b>все</b> ▾</option>';
   }
   if(layBtn)layBtn.addEventListener('click',function(e){e.stopPropagation();layPanel.classList.toggle('open');buildLayPanel()});
   if(layClear)layClear.addEventListener('click',function(e){e.stopPropagation();laySel=[];try{localStorage.setItem(KEY+'_lays','[]')}catch(e){};updateLayLabel();buildLayPanel();if(typeof render==='function')render()});
