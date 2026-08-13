@@ -82,22 +82,25 @@ td{padding:6px 8px;border-bottom:1px solid #F5F5F5;vertical-align:top}
 #tab .hidden-col{display:none}
 body:has(#showAll:checked) #tab .hidden-col{display:table-cell}
 
-/* 4. Скролл-обёртка и ширина таблицы */
+/* 4. Скролл-обёртка и ширина таблицы (ширина по содержимому, чтобы скролл работал).
+       Первая колонка НЕ закрепляется при горизонтальном скролле */
 .tbl-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:10px;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.04);-webkit-overflow-scrolling:touch}
 .tbl-scroll::-webkit-scrollbar{height:8px}
 .tbl-scroll::-webkit-scrollbar-track{background:#F3F3F3}
 .tbl-scroll::-webkit-scrollbar-thumb{background:#C9C9C9;border-radius:4px}
-#tab{width:100%;min-width:940px;border-collapse:separate;border-spacing:0;border-radius:0;overflow:visible}
+#tab{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;border-radius:0;overflow:visible}
 #tab th{position:sticky;top:0;z-index:3;background:linear-gradient(180deg,#E4003A,#C20032);border-bottom:2px solid rgba(255,255,255,.35);padding:11px 12px;font-size:12px;letter-spacing:.3px}
 #tab td{padding:9px 12px;line-height:1.5;border-bottom:1px solid #EDEFF2;background:#fff;vertical-align:middle}
-/* Зафиксированная первая колонка (Дата) */
-#tab th:first-child{left:0;z-index:4;box-shadow:2px 0 6px -3px rgba(0,0,0,.25)}
-#tab td:first-child{position:sticky;left:0;z-index:2;background:#fff;box-shadow:2px 0 6px -3px rgba(0,0,0,.12);font-weight:600}
-/* 7. Зебра и наведение */
+/* 7. Зебра, наведение, первая колонка без закрепления */
 #tab tr:nth-child(even) td,#tab tr.alt td{background:#F7F8FA}
-#tab tr:nth-child(even) td:first-child,#tab tr.alt td:first-child{background:#F7F8FA}
 #tab tr:hover td{background:#FFF5F7}
-#tab tr:hover td:first-child{background:#FFF5F7}
+#tab td:first-child{font-weight:600}
+/* Панель сортировки над таблицей */
+.tbl-extra{justify-content:space-between}
+.sort-pane{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sort-pane .sort-label{font-size:11px;font-weight:700;color:#8A8A8A;text-transform:uppercase;letter-spacing:.4px}
+.sort-pane select{padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;color:var(--black);cursor:pointer}
+#tab th.sorted-col{box-shadow:inset 0 -3px 0 rgba(255,255,255,.85)}
 /* Название — самая широкая */
 #tab th:nth-child(4),#tab td:nth-child(4){min-width:280px;max-width:420px}
 
@@ -198,6 +201,18 @@ body:has(#showAll:checked) #tab .hidden-col{display:table-cell}
   <div class="actions"><button class="btn green" onclick="add()" id="btnAdd">Добавить</button><button class="btn blue" onclick="upd()" id="btnUpd" style="display:none">Сохранить изменения</button><button class="btn gray" onclick="tgl()">Отмена</button></div>
 </div>
 <div class="tbl-extra">
+  <div class="sort-pane">
+    <label class="sort-label" for="sortBy">Сортировать по:</label>
+    <select id="sortBy">
+      <option value="date-desc">Дата (сначала новые)</option>
+      <option value="deadline-asc">Дедлайн (сначала срочные)</option>
+      <option value="nmc-desc">НМЦ (сначала дорогие)</option>
+      <option value="status">Статус участия (активные сверху)</option>
+      <option value="tech">Технологии (по алфавиту)</option>
+      <option value="reason">Причина отказа (по алфавиту)</option>
+    </select>
+    <button type="button" class="btn gray" id="sortReset" title="Сбросить сортировку">Сбросить</button>
+  </div>
   <label class="sw" title="Показать/скрыть скрытые колонки">
     <input type="checkbox" id="showAll">
     <span class="sw-track"><span class="sw-thumb"></span></span>
@@ -260,7 +275,7 @@ function exp(){var b=new Blob([JSON.stringify(data,null,1)],{type:'application/j
 function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function(){try{var x=JSON.parse(fr.result);if(!Array.isArray(x))throw 0;data=x;save();location.reload()}catch(err){alert('Ошибка импорта')}};fr.readAsText(f,'utf-8')}
 </script>
 <script>
-/* ===== Новый блок: визуальные улучшения таблицы (дополнительный код; существующие скрипты не изменены) ===== */
+/* ===== Новый блок: визуальные улучшения + сортировка + фильтр площадки + тумблер (дополнительный код; существующие скрипты не изменены) ===== */
 (function(){
   'use strict';
   /* 0-based индексы колонок, скрытых по умолчанию
@@ -268,9 +283,82 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
       + не входящие в «основной» список: Лид, Ссылка, Срок реал., Несоотв., Концепция, Вопросы,
         Ответы, Площадка-общ., Email/тел., Оценка) */
   var HIDDEN=[1,2,10,11,12,13,14,18,20,21,22,23,24,25,26,27,28];
+  /* Соответствие режима сортировки номеру колонки */
+  var SORT_COL={'date-desc':0,'deadline-asc':8,'nmc-desc':9,'status':15,'tech':17,'reason':19};
+  function isoT(s){var m=String(s||'').match(/(\d{2})\.(\d{2})\.(\d{4})/);return m?m[3]+'-'+m[2]+'-'+m[1]:''}
   function daysTo(s){if(!s)return 999;var m=s.match(/(\d{2})\.(\d{2})\.(\d{4})/);if(!m)return 999;var d=new Date(+m[3],+m[2]-1,+m[1]);return Math.ceil((d-new Date())/86400000)}
-  function parseNum(s){var n=String(s||'').replace(/[^\d.-]/g,'');return n?+n:-1}
+  function isoDays(s){if(!s)return 999;var p=s.split('-');if(p.length<3)return 999;var d=new Date(+p[0],+p[1]-1,+p[2]);return Math.ceil((d-new Date())/86400000)}
+  function parseNum(s){var n=String(s||'').replace(/[^\d.-]/g,'');if(!n||n==='-')return -1;var v=+n;return isNaN(v)?-1:v}
   function findRec(tr){var m=(tr.getAttribute('onclick')||'').match(/rowMenu\(event,(\d+)\)/);if(!m)return null;for(var k=0;k<data.length;k++){if(String(data[k].id)===m[1])return data[k]}return null}
+
+  /* --- 6. Тумблер «Показать все параметры»: сохранение состояния между сессиями --- */
+  var sw=document.getElementById('showAll');
+  if(sw){
+    try{sw.checked=localStorage.getItem(KEY+'_showAll')==='1'}catch(e){}
+    sw.addEventListener('change',function(){try{localStorage.setItem(KEY+'_showAll',sw.checked?'1':'0')}catch(e){}});
+  }
+
+  /* --- Сортировка через выпадающий список --- */
+  var sortBy=document.getElementById('sortBy');
+  var sortReset=document.getElementById('sortReset');
+  if(sortBy){
+    try{sortBy.value=localStorage.getItem(KEY+'_sort')||'date-desc'}catch(e){}
+    sortBy.addEventListener('change',function(){try{localStorage.setItem(KEY+'_sort',sortBy.value)}catch(e){};applySort()});
+    if(sortReset)sortReset.addEventListener('click',function(){sortBy.value='date-desc';try{localStorage.setItem(KEY+'_sort','date-desc')}catch(e){};applySort()});
+  }
+  function val(tr,name){return tr.getAttribute('data-'+name)||''}
+  function applySort(){
+    if(!sortBy)return;
+    var tab=document.getElementById('tab');if(!tab)return;
+    var mode=sortBy.value,ci=SORT_COL[mode];
+    if(ci===undefined)return;
+    var trs=[].slice.call(tab.querySelectorAll('tr'));
+    var head=trs.filter(function(t){return t.querySelector('th')});
+    var rows=trs.filter(function(t){return !t.querySelector('th')});
+    if(!rows.length)return;
+    var cmp;
+    function grp(diff){if(diff<0)return 0;if(diff<=1)return 1;if(diff<=7)return 2;return 3}
+    function stP(s){if(s==='да')return 0;if(s==='не ясно')return 1;if(!s)return 2;return 3}
+    function alpha(a,b){if(!a&&!b)return 0;if(!a)return 1;if(!b)return -1;return String(a).localeCompare(String(b),'ru')}
+    if(mode==='date-desc'){cmp=function(a,b){var x=val(a,'date'),y=val(b,'date');if(x&&!y)return -1;if(!x&&y)return 1;return y.localeCompare(x)}}
+    else if(mode==='deadline-asc'){cmp=function(a,b){var da=isoDays(val(a,'deadline')),db=isoDays(val(b,'deadline'));var ga=grp(da),gb=grp(db);if(ga!==gb)return ga-gb;return da-db}}
+    else if(mode==='nmc-desc'){cmp=function(a,b){return parseNum(val(b,'nmc'))-parseNum(val(a,'nmc'))}}
+    else if(mode==='status'){cmp=function(a,b){return stP(val(a,'status'))-stP(val(b,'status'))}}
+    else if(mode==='tech'){cmp=function(a,b){return alpha(val(a,'tech'),val(b,'tech'))}}
+    else if(mode==='reason'){cmp=function(a,b){return alpha(val(a,'reason'),val(b,'reason'))}}
+    else{return}
+    rows.sort(cmp);
+    var frag=document.createDocumentFragment();
+    head.forEach(function(t){frag.appendChild(t)});
+    rows.forEach(function(t){frag.appendChild(t)});
+    tab.appendChild(frag);
+    var ths=tab.querySelectorAll('th');
+    for(var i=0;i<ths.length;i++)ths[i].classList.remove('sorted-col');
+    if(ths[ci])ths[ci].classList.add('sorted-col');
+  }
+  function hasArrow(headerTr){var t=(headerTr&&headerTr.textContent)||'';return t.indexOf('▲')>=0||t.indexOf('▼')>=0}
+
+  /* --- 3. Заполнение фильтра «Площадка», если он пуст --- */
+  function fixPlatformFilter(){
+    var sel=document.getElementById('fLay');if(!sel)return;
+    if(sel.options.length>1)return;
+    if(data&&data.length){try{if(typeof fillLays==='function')fillLays()}catch(e){}}
+    if(sel.options.length>1)return;
+    var alt=['Площадка','Закон','Площадка (закон)','Площадка / закон','Закон/площадка'];
+    var k2=null;
+    if(data&&data.length){for(var a=0;a<alt.length;a++){if(data[0][alt[a]]!==undefined){k2=alt[a];break}}}
+    if(k2){
+      data.forEach(function(d){if(d[k2]!==undefined&&d['Закон / площадка']===undefined)d['Закон / площадка']=d[k2]});
+      try{if(typeof fillLays==='function')fillLays()}catch(e){}
+      if(sel.options.length>1)return;
+    }
+    var vals={};
+    var trs=document.querySelectorAll('#tab tr');
+    for(var i=0;i<trs.length;i++){var tr=trs[i];if(!tr.querySelector('th')){var c=tr.children[6];if(c){var t=(c.textContent||'').trim();if(t)vals[t]=1}}}
+    Object.keys(vals).sort().forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)});
+  }
+
+  /* --- Основной проход: классы видимости, data-атрибуты, подсветки, чипы --- */
   function enhance(){
     var tab=document.getElementById('tab');if(!tab)return;
     var rows=tab.querySelectorAll('tr');
@@ -299,6 +387,13 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
           }
         }
       }
+      /* data-атрибуты для сортировки строк */
+      tr.setAttribute('data-date',isoT(tds[0]?tds[0].textContent:''));
+      tr.setAttribute('data-deadline',isoT(tds[8]?tds[8].textContent:''));
+      tr.setAttribute('data-nmc',String(parseNum(tds[9]?tds[9].textContent:'')));
+      tr.setAttribute('data-status',(tds[15]?tds[15].textContent:'').trim());
+      tr.setAttribute('data-tech',(rec&&rec['Основные технологии'])||(tds[17]?tds[17].textContent:'').trim());
+      tr.setAttribute('data-reason',(rec&&rec['Типы причины неучастия в тендере'])||(tds[19]?tds[19].textContent:'').trim());
       /* Подсказки для обрезанных ячеек */
       if(rec){
         if(tds[19]&&(tds[19].textContent||'').trim())tds[19].setAttribute('title',(tds[19].textContent||'').trim());
@@ -307,9 +402,27 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
       }
     }
   }
+
+  /* --- Обработка перерисовок: первичная сортировка и повторное применение выбранной --- */
+  var lastHeader=null, appliedInitial=false;
+  function afterRender(){
+    var tab=document.getElementById('tab');if(!tab)return;
+    var h=tab.querySelector('tr');
+    if(h===lastHeader)return;
+    lastHeader=h;
+    if(!sortBy)return;
+    if(!appliedInitial){appliedInitial=true;applySort();return}
+    if(sortBy.value!=='date-desc'&&!hasArrow(h))applySort();
+  }
+
   enhance();
+  fixPlatformFilter();
+  afterRender();
   var timer=null;
-  new MutationObserver(function(){clearTimeout(timer);timer=setTimeout(enhance,20)}).observe(document.getElementById('tab'),{childList:true,subtree:true});
+  new MutationObserver(function(){
+    clearTimeout(timer);
+    timer=setTimeout(function(){enhance();fixPlatformFilter();afterRender()},20);
+  }).observe(document.getElementById('tab'),{childList:true,subtree:true});
 })();
 </script>
 </body>
