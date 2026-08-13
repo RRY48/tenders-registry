@@ -12,7 +12,7 @@ body{font-family:'Montserrat','Segoe UI',Arial,sans-serif;background:var(--bg);c
 .wrap{max-width:1800px;margin:0 auto}
 .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 h1{color:var(--red);font-size:22px;font-weight:800;letter-spacing:1px;margin:0}
-.logo{height:42px;width:auto}
+.logo{height:84px;width:auto}
 .sub{color:#999;font-size:13px;margin-bottom:12px}
 .toolbar{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .toolbar input[type=text]{padding:7px 12px;border:1px solid var(--border);border-radius:8px;flex:1;min-width:180px;font-family:inherit;font-size:13px}
@@ -31,7 +31,7 @@ textarea{min-height:50px}
 table{width:100%;border-collapse:collapse;background:var(--card);border-radius:10px;overflow:hidden;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 th{background:var(--red);color:#fff;text-align:left;padding:8px;position:sticky;top:0;cursor:pointer;white-space:nowrap;font-weight:600}
 td{padding:6px 8px;border-bottom:1px solid #F5F5F5;vertical-align:top}
-#tab tr:nth-child(even) td{background:#DADADA}
+#tab tr.alt td{background:#DADADA}
 #tab tr:hover td{background:#FFF5F7}
 .clamp4{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;max-width:320px}
 .soon{color:var(--red);font-weight:700}
@@ -125,8 +125,10 @@ function init(x){if(localStorage.getItem(KEY)){var o=JSON.parse(localStorage.get
 function save(){localStorage.setItem(KEY,JSON.stringify(data))}
 function fillDates(){var sel=document.getElementById('fDate'),arr=[...new Set(data.map(function(d){var m=(d['Дата']||'').match(/(\d{2})\.(\d{4})/);return m?m[1]+'.'+m[2]:''}).filter(Boolean))].sort(function(a,b){return a.split('.').reverse().join('').localeCompare(b.split('.').reverse().join(''))});arr.forEach(function(dt){var o=document.createElement('option');o.value=dt;o.textContent=dt;sel.appendChild(o)})}
 function fillLays(){var s=document.getElementById('fLay'),arr=[...new Set(data.map(function(d){return d['Закон / площадка']||'0'}).filter(function(v){return v!='0'}))].sort();arr.forEach(function(l){var o=document.createElement('option');o.value=l;o.textContent=l;s.appendChild(o)})}
-function fill(){fillDates();fillLays()}
-function render(){draw()}
+function fill(){fillDates();fillLays();restoreFilters()}
+function saveFilters(){try{localStorage.setItem(KEY+'_f',JSON.stringify({q:document.getElementById('q').value,dt:document.getElementById('fDate').value,la:document.getElementById('fLay').value,su:document.getElementById('fSub').value,sp:document.getElementById('fSus').value}))}catch(e){}}
+function restoreFilters(){try{var o=JSON.parse(localStorage.getItem(KEY+'_f'));if(!o)return;document.getElementById('q').value=o.q||'';document.getElementById('fDate').value=o.dt||'';document.getElementById('fLay').value=o.la||'';document.getElementById('fSub').value=o.su||'';document.getElementById('fSus').value=o.sp||''}catch(e){}}
+function render(){saveFilters();draw()}
 function filt(){var q=(document.getElementById('q').value||'').toLowerCase(),dt=document.getElementById('fDate').value,la=document.getElementById('fLay').value,su=document.getElementById('fSub').value,sp=document.getElementById('fSus').value;return data.filter(function(d){if(q){var t=((d['Название']||'')+' '+(d['Заказчик']||'')+' '+(d['Ссылка']||'')).toLowerCase();if(t.indexOf(q)<0)return false}if(dt){var dm=(d['Дата']||'').match(/(\d{2})\.(\d{4})/);if(!dm||(dm[1]+'.'+dm[2])!==dt)return false}if(la&&d['Закон / площадка']!==la)return false;if(su&&(d['Подались да/нет (нет)']||'')!==su)return false;if(sp&&(d['Подозрительный да/нет (нет)']||'')!==sp)return false;return true})}
 function dl(s){if(!s)return 999;var m=s.match(/(\d{2})\.(\d{2})\.(\d{4})/);if(!m)return 999;var d=new Date(+m[3],+m[2]-1,+m[1]);return Math.ceil((d-new Date())/86400000)}
 function esc(s){var t=document.createElement('div');t.textContent=s;return t.innerHTML}
@@ -137,7 +139,7 @@ function sort(i){var k=['Дата','№ лида','Ссылка','Названи
 function rowMenu(e,id){e.preventDefault();ctxId=id;var m=document.getElementById('ctx');m.style.display='block';var x=e.clientX,y=e.clientY;var mw=m.offsetWidth,mh=m.offsetHeight;if(x+mw>window.innerWidth)x-=mw;if(y+mh>window.innerHeight)y-=mh;m.style.left=x+'px';m.style.top=y+'px'}
 function ctxEdit(){document.getElementById('ctx').style.display='none';if(ctxId!=null)edit(ctxId)}
 function ctxDel(){document.getElementById('ctx').style.display='none';if(ctxId!=null)del(ctxId)}
-document.addEventListener('click',function(e){if(!e.target.closest('#ctx'))document.getElementById('ctx').style.display='none'});
+document.addEventListener('click',function(e){if(!e.target.closest('#ctx')&&!e.target.closest('#tab tr'))document.getElementById('ctx').style.display='none'});
 window.addEventListener('scroll',function(){document.getElementById('toTop').style.display=window.scrollY>300?'block':'none'});
 function del(id){if(!confirm('Удалить?'))return;data=data.filter(function(d){return d.id!==id});save();draw()}
 function tgl(){document.getElementById('form').classList.toggle('open');if(!document.getElementById('form').classList.contains('open')){editId=null;document.getElementById('btnAdd').style.display='';document.getElementById('btnUpd').style.display='none'}}
