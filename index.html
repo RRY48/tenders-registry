@@ -10,7 +10,9 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Montserrat','Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--black);padding:16px}
 .wrap{max-width:1800px;margin:0 auto}
-h1{color:var(--red);font-size:22px;font-weight:800;letter-spacing:1px}
+.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+h1{color:var(--red);font-size:22px;font-weight:800;letter-spacing:1px;margin:0}
+.logo{height:42px;width:auto}
 .sub{color:#999;font-size:13px;margin-bottom:12px}
 .toolbar{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .toolbar input[type=text]{padding:7px 12px;border:1px solid var(--border);border-radius:8px;flex:1;min-width:180px;font-family:inherit;font-size:13px}
@@ -29,7 +31,8 @@ textarea{min-height:50px}
 table{width:100%;border-collapse:collapse;background:var(--card);border-radius:10px;overflow:hidden;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 th{background:var(--red);color:#fff;text-align:left;padding:8px;position:sticky;top:0;cursor:pointer;white-space:nowrap;font-weight:600}
 td{padding:6px 8px;border-bottom:1px solid #F5F5F5;vertical-align:top}
-tr:hover{background:#FFF5F7}
+#tab tr:nth-child(even) td{background:#DADADA}
+#tab tr:hover td{background:#FFF5F7}
 .clamp4{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;max-width:320px}
 .soon{color:var(--red);font-weight:700}
 .tag{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:500}
