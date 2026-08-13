@@ -53,6 +53,94 @@ td{padding:6px 8px;border-bottom:1px solid #F5F5F5;vertical-align:top}
 /* Кнопка наверх */
 #toTop{display:none;position:fixed;bottom:24px;right:24px;z-index:999;width:46px;height:46px;border-radius:50%;background:var(--red);color:#fff;border:0;cursor:pointer;font-size:20px;font-family:inherit;font-weight:800;box-shadow:0 4px 12px rgba(228,0,58,.35);transition:opacity .2s}
 #toTop:hover{opacity:.85}
+/* ===== УЛУЧШЕНИЯ ВИЗУАЛЬНОГО ВОСПРИЯТИЯ (добавлено; существующие правила не удалялись) ===== */
+/* 1. Карточки-метрики: крупнее и цветокодированные */
+.stats{gap:10px}
+.stat{border:1px solid var(--border);border-top:3px solid var(--blue);border-radius:12px;padding:12px 18px;min-width:150px}
+.stat .n{font-size:28px;line-height:1.05}
+.stat .l{font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;color:#8A8A8A}
+.stat:first-child{border-top-color:var(--blue)}
+.stat:first-child .n{color:var(--blue)}
+.stat:nth-child(2){border-top-color:var(--green)}
+.stat:nth-child(2) .n{color:var(--green)}
+.stat:nth-child(3){border-top-color:#A0A0A0}
+.stat:nth-child(3) .n{color:#7D7D7D}
+/* 4-й блок «Показано» в тулбаре */
+.count{margin-left:auto;font-size:15px;font-weight:700;color:#165B80;background:#EDF5FB;border:1px solid #CEE2F1;border-radius:10px;padding:9px 16px;white-space:nowrap;line-height:1.3}
+
+/* 6. Тумблер «Показать все параметры» */
+.tbl-extra{display:flex;justify-content:flex-end;align-items:center;margin:0 0 8px}
+.sw{display:inline-flex;align-items:center;gap:9px;cursor:pointer;user-select:none;-webkit-user-select:none}
+.sw input{position:absolute;opacity:0;pointer-events:none}
+.sw-track{width:42px;height:23px;border-radius:999px;background:#CFCFCF;position:relative;transition:background .2s;flex:none}
+.sw-thumb{position:absolute;top:2px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
+.sw input:checked + .sw-track{background:var(--green)}
+.sw input:checked + .sw-track .sw-thumb{left:20px}
+.sw-text{font-size:13px;font-weight:700;color:var(--black)}
+
+/* 2. Скрытые колонки (класс .hidden-col проставляет новый скрипт; переключение — чисто через CSS) */
+#tab .hidden-col{display:none}
+body:has(#showAll:checked) #tab .hidden-col{display:table-cell}
+
+/* 4. Скролл-обёртка и ширина таблицы */
+.tbl-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:10px;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.04);-webkit-overflow-scrolling:touch}
+.tbl-scroll::-webkit-scrollbar{height:8px}
+.tbl-scroll::-webkit-scrollbar-track{background:#F3F3F3}
+.tbl-scroll::-webkit-scrollbar-thumb{background:#C9C9C9;border-radius:4px}
+#tab{width:100%;min-width:940px;border-collapse:separate;border-spacing:0;border-radius:0;overflow:visible}
+#tab th{position:sticky;top:0;z-index:3;background:linear-gradient(180deg,#E4003A,#C20032);border-bottom:2px solid rgba(255,255,255,.35);padding:11px 12px;font-size:12px;letter-spacing:.3px}
+#tab td{padding:9px 12px;line-height:1.5;border-bottom:1px solid #EDEFF2;background:#fff;vertical-align:middle}
+/* Зафиксированная первая колонка (Дата) */
+#tab th:first-child{left:0;z-index:4;box-shadow:2px 0 6px -3px rgba(0,0,0,.25)}
+#tab td:first-child{position:sticky;left:0;z-index:2;background:#fff;box-shadow:2px 0 6px -3px rgba(0,0,0,.12);font-weight:600}
+/* 7. Зебра и наведение */
+#tab tr:nth-child(even) td,#tab tr.alt td{background:#F7F8FA}
+#tab tr:nth-child(even) td:first-child,#tab tr.alt td:first-child{background:#F7F8FA}
+#tab tr:hover td{background:#FFF5F7}
+#tab tr:hover td:first-child{background:#FFF5F7}
+/* Название — самая широкая */
+#tab th:nth-child(4),#tab td:nth-child(4){min-width:280px;max-width:420px}
+
+/* 3. Дедлайн: срочный — красный (0-2 дня, класс .soon со страницы),
+       ближний — оранжевый (3-7 дней, класс добавляет новый скрипт) */
+#tab td.soon{color:#C5002B;font-weight:800;background:#FDECEF;border-radius:8px}
+#tab td.dl-mid{color:#B25E00;font-weight:700;background:#FFF3DF;border-radius:8px}
+
+/* Подались → «Статус»: зелёный/красный/жёлтый круг */
+#tab th:nth-child(16){font-size:0;color:transparent}
+#tab th:nth-child(16)::after{content:'Статус';font-size:12px;font-weight:600;color:#fff;letter-spacing:0}
+#tab td:nth-child(16) .tag{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border-radius:50%;font-size:0;line-height:1}
+#tab td:nth-child(16) .tag.green{background:var(--green);box-shadow:0 0 0 2px rgba(0,169,132,.15)}
+#tab td:nth-child(16) .tag.green::after{content:'✓';font-size:14px;color:#fff;font-weight:800}
+#tab td:nth-child(16) .tag.red{background:var(--red);box-shadow:0 0 0 2px rgba(228,0,58,.15)}
+#tab td:nth-child(16) .tag.red::after{content:'✕';font-size:14px;color:#fff;font-weight:800}
+#tab td:nth-child(16) .tag.or{background:#F0A500;box-shadow:0 0 0 2px rgba(240,165,0,.15)}
+#tab td:nth-child(16) .tag.or::after{content:'?';font-size:14px;color:#fff;font-weight:800}
+
+/* Подозр. → «Отсев»: красный ⚠, пусто — ничего */
+#tab th:nth-child(17){font-size:0;color:transparent}
+#tab th:nth-child(17)::after{content:'Отсев';font-size:12px;font-weight:600;color:#fff;letter-spacing:0}
+#tab td:nth-child(17) .tag{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;font-size:0;line-height:1;border-radius:6px}
+#tab td:nth-child(17) .tag.red{background:#FDECEF;box-shadow:0 0 0 2px rgba(228,0,58,.12)}
+#tab td:nth-child(17) .tag.red::after{content:'⚠';font-size:15px;color:var(--red)}
+#tab td:nth-child(17) .tag.gray{display:none}
+
+/* Технологии → чипы (первые 2-3, остальное по наведению) */
+.tech-wrap{display:flex;flex-wrap:wrap;gap:2px;max-height:24px;overflow:hidden;position:relative}
+.tech-wrap:hover{max-height:none;overflow:visible;z-index:20}
+.tech-wrap:hover .tech-chip{position:relative;z-index:21}
+.tech-chip{display:inline-block;background:#E8F3FB;border:1px solid #C9E5F5;color:#126A96;border-radius:999px;padding:1px 9px;font-size:11px;font-weight:600;line-height:18px;white-space:nowrap}
+.tech-more{font-size:12px;font-weight:800;color:#8C8C8C;line-height:20px}
+.tech-wrap:hover .tech-more{display:none}
+
+/* НМЦ: больше 10 млн — золото, меньше 1 млн — бледно-серый */
+#tab td.nmc-hot{color:#8A6D00;font-weight:800;background:#FFF8E1;border-radius:8px}
+#tab td.nmc-cold{color:#BDBDBD;font-weight:400}
+
+/* Причина — обрезка до 2-3 слов с многоточием */
+#tab td:nth-child(20){max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Комментарии — обрезка + подсказка с полным текстом */
+#tab td:nth-child(30){max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style>
 </head>
 <body>
@@ -109,7 +197,14 @@ td{padding:6px 8px;border-bottom:1px solid #F5F5F5;vertical-align:top}
   </div>
   <div class="actions"><button class="btn green" onclick="add()" id="btnAdd">Добавить</button><button class="btn blue" onclick="upd()" id="btnUpd" style="display:none">Сохранить изменения</button><button class="btn gray" onclick="tgl()">Отмена</button></div>
 </div>
-<table id="tab"></table>
+<div class="tbl-extra">
+  <label class="sw" title="Показать/скрыть скрытые колонки">
+    <input type="checkbox" id="showAll">
+    <span class="sw-track"><span class="sw-thumb"></span></span>
+    <span class="sw-text">Показать все параметры</span>
+  </label>
+</div>
+<div class="tbl-scroll"><table id="tab"></table></div>
 <div class="empty" id="emp">Загрузка…</div>
 </div>
 <div id="ctx">
@@ -163,6 +258,59 @@ function upd(){if(!editId)return;var o=collect();var idx=data.findIndex(function
 function clearForm(){['nLead','nName','nCust','nReg','nLaw','nType','nDl','nNmt','nSecBid','nSecContr','nStartBid','nFinalBid','nPricePercent','nTech','nTerm','nReasonType','nReasonDesc','nContact','nCriteria','nHref','nComm','nHist','nDate','nDateLbl'].forEach(function(i){document.getElementById(i).value=''});['nSub','nSus','nConcept','nQAsked','nQAns','nOnlyPlatform','nEmailPhone','nEval'].forEach(function(i){document.getElementById(i).value=''})}
 function exp(){var b=new Blob([JSON.stringify(data,null,1)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='tenders.json';a.click()}
 function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function(){try{var x=JSON.parse(fr.result);if(!Array.isArray(x))throw 0;data=x;save();location.reload()}catch(err){alert('Ошибка импорта')}};fr.readAsText(f,'utf-8')}
+</script>
+<script>
+/* ===== Новый блок: визуальные улучшения таблицы (дополнительный код; существующие скрипты не изменены) ===== */
+(function(){
+  'use strict';
+  /* 0-based индексы колонок, скрытых по умолчанию
+     (Обесп. заявки, Обесп. проц., Нач. ставка, Кон. ставка, % цены, Контакты, Критерии %
+      + не входящие в «основной» список: Лид, Ссылка, Срок реал., Несоотв., Концепция, Вопросы,
+        Ответы, Площадка-общ., Email/тел., Оценка) */
+  var HIDDEN=[1,2,10,11,12,13,14,18,20,21,22,23,24,25,26,27,28];
+  function daysTo(s){if(!s)return 999;var m=s.match(/(\d{2})\.(\d{2})\.(\d{4})/);if(!m)return 999;var d=new Date(+m[3],+m[2]-1,+m[1]);return Math.ceil((d-new Date())/86400000)}
+  function parseNum(s){var n=String(s||'').replace(/[^\d.-]/g,'');return n?+n:-1}
+  function findRec(tr){var m=(tr.getAttribute('onclick')||'').match(/rowMenu\(event,(\d+)\)/);if(!m)return null;for(var k=0;k<data.length;k++){if(String(data[k].id)===m[1])return data[k]}return null}
+  function enhance(){
+    var tab=document.getElementById('tab');if(!tab)return;
+    var rows=tab.querySelectorAll('tr');
+    for(var r=0;r<rows.length;r++){
+      var tr=rows[r],cells=tr.children,isHead=tr.querySelector('th')!==null,i;
+      for(i=0;i<cells.length;i++){
+        if(HIDDEN.indexOf(i)>=0)cells[i].classList.add('hidden-col');
+        else cells[i].classList.remove('hidden-col');
+      }
+      if(isHead)continue;
+      var rec=findRec(tr),tds=tr.children;
+      /* Дедлайн 3-7 дней → оранжевый (0-2 дня уже помечены .soon скриптом страницы) */
+      if(tds[8]){var dl=daysTo((tds[8].textContent||'').trim());tds[8].classList.remove('dl-mid');if(dl>=3&&dl<=7)tds[8].classList.add('dl-mid')}
+      /* НМЦ: >10 млн — золото, <1 млн — бледно-серый */
+      if(tds[9]){var n=parseNum(tds[9].textContent);tds[9].classList.remove('nmc-hot','nmc-cold');if(n>10000000)tds[9].classList.add('nmc-hot');else if(n>0&&n<1000000)tds[9].classList.add('nmc-cold')}
+      /* Технологии → чипы (первые 2-3 видимы, остальные по наведению) */
+      if(tds[17]&&!tds[17].querySelector('.tech-wrap')){
+        var raw=(tds[17].textContent||'').trim();
+        if(raw){
+          var techs=raw.split(/[,;\u2022\/]+/).map(function(t){return t.trim()}).filter(Boolean);
+          if(techs.length){
+            var wrap=document.createElement('span');wrap.className='tech-wrap';
+            techs.forEach(function(t){var s=document.createElement('span');s.className='tech-chip';s.textContent=t;wrap.appendChild(s)});
+            if(techs.length>3){var more=document.createElement('span');more.className='tech-more';more.textContent='…';wrap.appendChild(more)}
+            tds[17].innerHTML='';tds[17].appendChild(wrap);
+          }
+        }
+      }
+      /* Подсказки для обрезанных ячеек */
+      if(rec){
+        if(tds[19]&&(tds[19].textContent||'').trim())tds[19].setAttribute('title',(tds[19].textContent||'').trim());
+        if(tds[20]&&(tds[20].textContent||'').trim())tds[20].setAttribute('title',(tds[20].textContent||'').trim());
+        if(tds[29]&&(rec['Комметарии']||'').trim())tds[29].setAttribute('title',rec['Комметарии']);
+      }
+    }
+  }
+  enhance();
+  var timer=null;
+  new MutationObserver(function(){clearTimeout(timer);timer=setTimeout(enhance,20)}).observe(document.getElementById('tab'),{childList:true,subtree:true});
+})();
 </script>
 </body>
 </html>
