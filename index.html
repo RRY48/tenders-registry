@@ -92,7 +92,11 @@ body:has(#showAll:checked) #tab .hidden-col{display:table-cell}
 html,body{max-width:100%;overflow-x:hidden}
 #tab{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;border-radius:0;overflow:visible}
 #tab th{position:sticky;top:0;z-index:3;background:linear-gradient(180deg,#E4003A,#C20032);border-bottom:2px solid rgba(255,255,255,.35);padding:11px 12px;font-size:12px;letter-spacing:.3px}
-#tab td{padding:9px 12px;line-height:1.5;border-bottom:1px solid #EDEFF2;background:#fff;vertical-align:middle}
+#tab td{padding:9px 12px;line-height:1.5;border-bottom:1px solid #EDEFF2;background:#fff;vertical-align:middle;white-space:nowrap}
+/* Многострочные колонки: название, заказчик, причина несоответствия, итоги */
+#tab td:nth-child(4),#tab td:nth-child(5){white-space:normal}
+#tab td:nth-child(21){white-space:normal;max-width:260px}
+#tab td:nth-child(31){white-space:normal;max-width:360px}
 /* 7. Зебра, наведение, первая колонка без закрепления */
 #tab tr:nth-child(even) td,#tab tr.alt td{background:#F7F8FA}
 #tab tr:hover td{background:#FFF5F7}
@@ -207,6 +211,8 @@ html,body{max-width:100%;overflow-x:hidden}
     <label class="sort-label" for="sortBy">Сортировать по:</label>
     <select id="sortBy">
       <option value="date-desc">Дата (сначала новые)</option>
+      <option value="date-asc">Дата (хронология: старые сверху)</option>
+      <option value="none">Убрать сортировку (исходный порядок)</option>
       <option value="deadline-asc">Дедлайн (сначала срочные)</option>
       <option value="nmc-desc">НМЦ (сначала дорогие)</option>
       <option value="status">Статус участия (активные сверху)</option>
@@ -286,7 +292,10 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
         Ответы, Площадка-общ., Email/тел., Оценка) */
   var HIDDEN=[1,2,10,11,12,13,14,18,20,21,22,23,24,25,26,27,28];
   /* Соответствие режима сортировки номеру колонки */
-  var SORT_COL={'date-desc':0,'deadline-asc':8,'nmc-desc':9,'status':15,'tech':17,'reason':19};
+  var SORT_COL={'date-desc':0,'date-asc':0,'deadline-asc':8,'nmc-desc':9,'status':15,'tech':17,'reason':19};
+  /* Исходный порядок строк (для режима «Убрать сортировку») */
+  var origIds=null;
+  function snapshotOrder(){if(origIds)return;var trs=document.querySelectorAll('#tab tr'),ids=[];for(var i=0;i<trs.length;i++){var t=trs[i];if(t.querySelector('th'))continue;var m=(t.getAttribute('onclick')||'').match(/rowMenu\(event,(\d+)\)/);if(m)ids.push(m[1])}if(ids.length)origIds=ids}
   function isoT(s){var m=String(s||'').match(/(\d{2})\.(\d{2})\.(\d{4})/);return m?m[3]+'-'+m[2]+'-'+m[1]:''}
   function daysTo(s){if(!s)return 999;var m=s.match(/(\d{2})\.(\d{2})\.(\d{4})/);if(!m)return 999;var d=new Date(+m[3],+m[2]-1,+m[1]);return Math.ceil((d-new Date())/86400000)}
   function isoDays(s){if(!s)return 999;var p=s.split('-');if(p.length<3)return 999;var d=new Date(+p[0],+p[1]-1,+p[2]);return Math.ceil((d-new Date())/86400000)}
@@ -322,14 +331,26 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
     function grp(diff){if(diff<0)return 0;if(diff<=1)return 1;if(diff<=7)return 2;return 3}
     function stP(s){if(s==='да')return 0;if(s==='не ясно')return 1;if(!s)return 2;return 3}
     function alpha(a,b){if(!a&&!b)return 0;if(!a)return 1;if(!b)return -1;return String(a).localeCompare(String(b),'ru')}
-    if(mode==='date-desc'){cmp=function(a,b){var x=val(a,'date'),y=val(b,'date');if(x&&!y)return -1;if(!x&&y)return 1;return y.localeCompare(x)}}
-    else if(mode==='deadline-asc'){cmp=function(a,b){var da=isoDays(val(a,'deadline')),db=isoDays(val(b,'deadline'));var ga=grp(da),gb=grp(db);if(ga!==gb)return ga-gb;return da-db}}
-    else if(mode==='nmc-desc'){cmp=function(a,b){return parseNum(val(b,'nmc'))-parseNum(val(a,'nmc'))}}
-    else if(mode==='status'){cmp=function(a,b){return stP(val(a,'status'))-stP(val(b,'status'))}}
-    else if(mode==='tech'){cmp=function(a,b){return alpha(val(a,'tech'),val(b,'tech'))}}
-    else if(mode==='reason'){cmp=function(a,b){return alpha(val(a,'reason'),val(b,'reason'))}}
-    else{return}
-    rows.sort(cmp);
+    if(mode==='none'){
+      if(origIds&&origIds.length){
+        var byId={};
+        rows.forEach(function(t){var m=(t.getAttribute('onclick')||'').match(/rowMenu\(event,(\d+)\)/);if(m)byId[m[1]]=t});
+        var ord=[];
+        origIds.forEach(function(id){if(byId[id]){ord.push(byId[id]);delete byId[id]}});
+        Object.keys(byId).forEach(function(k){ord.push(byId[k])});
+        rows=ord;
+      }
+    }else{
+      if(mode==='date-desc'){cmp=function(a,b){var x=val(a,'date'),y=val(b,'date');if(x&&!y)return -1;if(!x&&y)return 1;return y.localeCompare(x)}}
+      else if(mode==='date-asc'){cmp=function(a,b){var x=val(a,'date'),y=val(b,'date');if(!x&&!y)return 0;if(!x)return 1;if(!y)return -1;return x.localeCompare(y)}}
+      else if(mode==='deadline-asc'){cmp=function(a,b){var da=isoDays(val(a,'deadline')),db=isoDays(val(b,'deadline'));var ga=grp(da),gb=grp(db);if(ga!==gb)return ga-gb;return da-db}}
+      else if(mode==='nmc-desc'){cmp=function(a,b){return parseNum(val(b,'nmc'))-parseNum(val(a,'nmc'))}}
+      else if(mode==='status'){cmp=function(a,b){return stP(val(a,'status'))-stP(val(b,'status'))}}
+      else if(mode==='tech'){cmp=function(a,b){return alpha(val(a,'tech'),val(b,'tech'))}}
+      else if(mode==='reason'){cmp=function(a,b){return alpha(val(a,'reason'),val(b,'reason'))}}
+      else{return}
+      rows.sort(cmp);
+    }
     var frag=document.createDocumentFragment();
     head.forEach(function(t){frag.appendChild(t)});
     rows.forEach(function(t){frag.appendChild(t)});
@@ -403,6 +424,7 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
         if(tds[29]&&(rec['Комметарии']||'').trim())tds[29].setAttribute('title',rec['Комметарии']);
       }
     }
+    snapshotOrder();
   }
 
   /* --- Обработка перерисовок: первичная сортировка и повторное применение выбранной --- */
