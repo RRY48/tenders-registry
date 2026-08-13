@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Реестр тендеров 2026</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--accent:#1f4e79;--border:#d0d7de}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:#222;padding:16px}
+.wrap{max-width:1400px;margin:0 auto}
+h1{color:var(--accent);font-size:22px}
+.sub{color:#777;font-size:13px;margin-bottom:12px}
+.toolbar{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.toolbar input[type=text]{padding:7px 10px;border:1px solid var(--border);border-radius:6px;flex:1;min-width:180px}
+.toolbar select{padding:6px;border:1px solid var(--border);border-radius:6px}
+.btn{padding:7px 12px;border:0;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;font-size:13px}
+.btn.green{background:#5cb85c}.btn.gray{background:#6c757d}
+.count{font-size:13px;color:#555;margin-left:auto}
+.form{display:none;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px}
+.form.open{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+label{font-size:12px;color:#555;display:block}
+input,select,textarea{width:100%;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:13px}
+textarea{min-height:50px}
+.actions{margin-top:10px;display:flex;gap:8px}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:8px;overflow:hidden;font-size:12px}
+th{background:var(--accent);color:#fff;text-align:left;padding:8px;position:sticky;top:0;cursor:pointer}
+td{padding:6px 8px;border-bottom:1px solid #eef1f4;vertical-align:top}
+tr:hover{background:#f0f6ff}
+.soon{color:#d9534f;font-weight:700}
+.tag{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px}
+.tag.gray{background:#eee;color:#555}.tag.green{background:#dff0d8;color:#3c763d}
+.tag.red{background:#f2dede;color:#a94442}.tag.or{background:#fcf8e3;color:#8a6d3b}
+.stats{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;min-width:140px}
+.stat .n{font-size:22px;font-weight:700;color:var(--accent)}
+.stat .l{font-size:12px;color:#777}
+.empty{padding:30px;text-align:center;color:#888}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Реестр тендеров 2026</h1>
+<div class="sub">Быстрый ввод · импорт · поиск/фильтрация · контроль сроков подачи</div>
+<div class="stats" id="stats"></div>
+<div class="toolbar">
+  <input type="text" id="q" placeholder="Поиск: название, заказчик, ссылка…" oninput="render()">
+  <select id="fLay" onchange="render()"><option value="">Все площадки</option></select>
+  <select id="fSub" onchange="render()"><option value="">Подача: все</option><option value="да">да</option><option value="нет">нет</option><option value="не ясно">не ясно</option></select>
+  <select id="fSus" onchange="render()"><option value="">Подозрительные: все</option><option value="да">да</option><option value="нет">нет</option></select>
+  <button class="btn green" onclick="tgl()">+ Быстрый ввод</button>
+  <button class="btn gray" onclick="exp()">Экспорт</button>
+  <label class="btn gray" style="cursor:pointer">Импорт<input type="file" id="fimp" accept=".json" style="display:none" onchange="imp(event)"></label>
+  <span class="count" id="cnt"></span>
+</div>
+<div class="form" id="form">
+  <div class="grid">
+    <div><label>Предмет закупки *</label><input id="nName"></div>
+    <div><label>Заказчик</label><input id="nCust"></div>
+    <div><label>Регион</label><input id="nReg"></div>
+    <div><label>Закон / площадка</label><input id="nLaw"></div>
+    <div><label>Тип процедуры</label><input id="nType"></div>
+    <div><label>НМЦ (руб)</label><input id="nNmt"></div>
+    <div><label>Дедлайн</label><input id="nDl" type="date"></div>
+    <div><label>Ссылка</label><input id="nHref"></div>
+    <div><label>Технологии</label><input id="nTech"></div>
+    <div><label>Подались</label><select id="nSub"><option value="">-</option><option value="да">да</option><option value="нет">нет</option><option value="не ясно">не ясно</option></select></div>
+    <div><label>Подозрительный</label><select id="nSus"><option value="">-</option><option value="да">да</option><option value="нет">нет</option></select></div>
+    <div><label>Причина неучастия</label><input id="nReason"></div>
+    <div><label>Комментарии</label><textarea id="nComm"></textarea></div>
+  </div>
+  <div class="actions"><button class="btn green" onclick="add()">Добавить</button><button class="btn gray" onclick="tgl()">Отмена</button></div>
+</div>
+<table id="tab"></table>
+<div class="empty" id="emp">Загрузка…</div>
+</div>
+<script>
+var data=[], KEY='tenders2026_web';
+fetch('data.json').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(x){init(x)}).catch(function(){var s=localStorage.getItem(KEY);if(s){data=JSON.parse(s);draw()}else{document.getElementById('emp').textContent='data.json не найден — используйте импорт'}});
+function init(x){var s=localStorage.getItem(KEY);data=s?JSON.parse(s):x;if(!s)localStorage.setItem(KEY,JSON.stringify(data));fill();draw()}
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function fill(){var s=document.getElementById('fLay'),arr=[...new Set(data.map(function(d){return d['Закон / площадка']||'0'}).filter(function(v){return v!='0'})].sort();arr.forEach(function(l){var o=document.createElement('option');o.value=l;o.textContent=l;s.appendChild(o)})}
+function filt(){var q=(document.getElementById('q').value||'').toLowerCase(),la=document.getElementById('fLay').value,su=document.getElementById('fSub').value,sp=document.getElementById('fSus').value;return data.filter(function(d){if(q){var t=((d['Предмет закупки']||'')+' '+(d['Заказчик']||'')+' '+(d['Ссылка']||'')).toLowerCase();if(t.indexOf(q)<0)return false}if(la&&d['Закон / площадка']!==la)return false;if(su&&(d['Подались да/нет']||'')!==su)return false;if(sp&&(d['Подозрительный («под кого-то»)' ]||'')!==sp)return false;return true})}
+function dl(s){if(!s)return 999;var m=s.match(/(\d{2})\.(\d{2})\.(\d{4})/);if(!m)return 999;var d=new Date(+m[3],+m[2]-1,+m[1]);return Math.ceil((d-new Date())/86400000)}
+function esc(s){var t=document.createElement('div');t.textContent=s;return t.innerHTML}
+function draw(){var r=filt(),h=['Предмет закупки','Заказчик','Регион','Закон / площадка','НМЦ','Дедлайн','Технологии','Подались','Подозрительный','Причина','Комментарии',''];document.getElementById('stats').innerHTML='<div class="stat"><div class="n">'+data.length+'</div><div class="l">Всего</div></div><div class="stat"><div class="n">'+data.filter(function(d){return d['Подались да/нет']=='да'}).length+'</div><div class="l">Подались</div></div><div class="stat"><div class="n">'+data.filter(function(d){return d['Подозрительный («под кого-то»)' ]=='да'}).length+'</div><div class="l">Подозрительные</div></div>';document.getElementById('cnt').textContent='Показано: '+r.length+' из '+data.length;document.getElementById('emp').style.display=r.length?'none':'block';document.getElementById('tab').innerHTML='<tr>'+h.map(function(x,i){return '<th onclick="sort('+i+')">'+esc(x)+'</th>'}).join('')+'</tr>';r.forEach(function(d){var dlT=d['Дата окончания заявок']?d['Дата окончания заявок'].split(' ')[0]:'';var dc=(dl(dlT)>=0&&dl(dlT)<=3)?' class="soon"':'';var sb=(d['Подались да/нет']||'')=='да'?'<span class="tag green">да</span>':((d['Подались да/нет']||'')=='нет'?'<span class="tag red">нет</span>':'<span class="tag or">не ясно</span>');var sp=(d['Подозрительный («под кого-то»)' ]||'')=='да'?'<span class="tag red">да</span>':'<span class="tag gray">-</span>';var lk=(d['Ссылка']||'').indexOf('http')==0?' <a href="'+esc(d['Ссылка'])+'" target="_blank">link</a>':'';document.getElementById('tab').insertAdjacentHTML('beforeend','<tr><td><b>'+esc(d['Предмет закупки']||'')+'</b>'+lk+'</td><td>'+esc(d['Заказчик']||'')+'</td><td>'+esc(d['Регион']||'')+'</td><td>'+esc(d['Закон / площадка']||'')+'<br>'+esc(d['Тип процедуры']||'')+'</td><td>'+esc(d['НМЦ (₽)']||'')+'</td><td'+dc+'>'+esc(dlT)+'</td><td>'+esc(d['Технологии / стек']||'')+'</td><td>'+sb+'</td><td>'+sp+'</td><td>'+esc(d['Причина неучастия']||'')+'</td><td>'+esc((d['Комментарии']||'').slice(0,60))+'</td><td>'+((d.id!=null)?'<button class="btn gray" onclick="del('+d.id+')">x</button>':'')+'</td></tr>')})}
+function sort(i){var k=['Предмет закупки','Заказчик','Регион','Закон / площадка','НМЦ (₽)','Дата окончания заявок','Технологии / стек','Подались да/нет','Подозрительный («под кого-то»)' ,'Причина неучастия','Комментарии'][i];data.sort(function(a,b){return String(a[k]||'').localeCompare(String(b[k]||''),'ru')});save();draw()}
+function del(id){data=data.filter(function(d){return d.id!==id});save();draw()}
+function tgl(){document.getElementById('form').classList.toggle('open')}
+function g(id){return document.getElementById(id).value.trim()}
+function add(){if(!g('nName')){alert('Укажите предмет');return}var dlV=g('nDl'),dlS=dlV?(function(){var p=dlV.split('-');return p[2]+'.'+p[1]+'.'+p[0]})():'';data.unshift({id:Date.now(),'№':data.length+1,'Дата добавления':(function(){var d=new Date();return ('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+d.getFullYear()})(),'Предмет закупки':g('nName'),'Заказчик':g('nCust'),'Регион':g('nReg'),'Закон / площадка':g('nLaw'),'Тип процедуры':g('nType'),'НМЦ (₽)':g('nNmt'),'Дата окончания заявок':dlS,'Ссылка':g('nHref'),'Технологии / стек':g('nTech'),'Подались да/нет':document.getElementById('nSub').value,'Подозрительный («под кого-то»)' :document.getElementById('nSus').value,'Причина неучастия':g('nReason'),'Комментарии':g('nComm'),'Статус / итог':''});save();draw();tgl();['nName','nCust','nReg','nLaw','nType','nNmt','nDl','nHref','nTech','nReason','nComm'].forEach(function(i){document.getElementById(i).value=''})}
+function exp(){var b=new Blob([JSON.stringify(data,null,1)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='tenders.json';a.click()}
+function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function(){try{var x=JSON.parse(fr.result);if(!Array.isArray(x))throw 0;data=x;save();location.reload()}catch(err){alert('Ошибка импорта')}};fr.readAsText(f,'utf-8')}
+</script>
+</body>
+</html>
