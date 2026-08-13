@@ -88,6 +88,17 @@ body:has(#showAll:checked) #tab .hidden-col{display:table-cell}
 .tbl-scroll::-webkit-scrollbar{height:8px}
 .tbl-scroll::-webkit-scrollbar-track{background:#F3F3F3}
 .tbl-scroll::-webkit-scrollbar-thumb{background:#C9C9C9;border-radius:4px}
+/* Кастомный видимый скроллбар таблицы (Windows 11 прячет системные до взаимодействия) */
+.tbl-hscroll{display:none;height:16px;background:#F3F3F3;border:1px solid var(--border);border-top:0;border-radius:0 0 10px 10px;position:relative;cursor:pointer;z-index:5;user-select:none;-webkit-user-select:none}
+.tbl-hscroll.on{display:block}
+.tbl-harrow{position:absolute;top:0;bottom:0;width:24px;display:flex;align-items:center;justify-content:center;color:#777;font-size:16px;font-weight:700;background:#ECECEC}
+.tbl-harrow:hover{background:#DDDDDD;color:#333}
+.tbl-harrow.left{left:0;border-right:1px solid var(--border);border-radius:0 0 0 10px}
+.tbl-harrow.right{right:0;border-left:1px solid var(--border);border-radius:0 0 10px 0}
+.tbl-hbar{position:relative;height:100%;margin:0 25px;cursor:pointer}
+.tbl-hthumb{position:absolute;top:2px;bottom:2px;left:0;width:80px;min-width:36px;background:#C9C9C9;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);cursor:grab;transition:background .15s}
+.tbl-hthumb:hover{background:#A8A8A8}
+.tbl-hscroll.dragging .tbl-hthumb{background:#8F8F8F;cursor:grabbing}
 /* Страница не скроллится по горизонтали — весь горизонтальный скролл остаётся внутри таблицы */
 html,body{max-width:100%;overflow-x:hidden}
 #tab{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;border-radius:0;overflow:visible}
@@ -228,6 +239,11 @@ html,body{max-width:100%;overflow-x:hidden}
   </label>
 </div>
 <div class="tbl-scroll"><table id="tab"></table></div>
+<div class="tbl-hscroll">
+  <span class="tbl-harrow left">‹</span>
+  <div class="tbl-hbar"><div class="tbl-hthumb"></div></div>
+  <span class="tbl-harrow right">›</span>
+</div>
 <div class="empty" id="emp">Загрузка…</div>
 </div>
 <div id="ctx">
@@ -361,6 +377,50 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
   }
   function hasArrow(headerTr){var t=(headerTr&&headerTr.textContent)||'';return t.indexOf('▲')>=0||t.indexOf('▼')>=0}
 
+  /* --- 4. Кастомный видимый скроллбар (системный скрыт Windows 11) --- */
+  var sc=document.querySelector('.tbl-scroll');
+  var hsc=document.querySelector('.tbl-hscroll');
+  var hbar=document.querySelector('.tbl-hbar');
+  var hthumb=document.querySelector('.tbl-hthumb');
+  var harrL=document.querySelector('.tbl-harrow.left');
+  var harrR=document.querySelector('.tbl-harrow.right');
+  function syncHScroll(){
+    if(!sc||!hsc||!hbar||!hthumb)return;
+    var cw=sc.clientWidth,sw=sc.scrollWidth;
+    if(sw>cw+1){
+      hsc.classList.add('on');
+      var avail=hbar.clientWidth;
+      var thumbW=Math.max(36,Math.round(avail*cw/sw));
+      hthumb.style.width=thumbW+'px';
+      var maxL=avail-thumbW;
+      var pc=cw>0?(sc.scrollLeft/(sw-cw)):0;
+      hthumb.style.left=Math.round(pc*maxL)+'px';
+    }else{
+      hsc.classList.remove('on');
+    }
+  }
+  var hDragging=false;
+  function setFromX(x){
+    if(!sc||!hbar||!hthumb)return;
+    var r=hbar.getBoundingClientRect();
+    var thumbW=hthumb.offsetWidth;
+    var maxL=hbar.clientWidth-thumbW;
+    var l=Math.min(maxL,Math.max(0,x-r.left-thumbW/2));
+    hthumb.style.left=l+'px';
+    var sw=sc.scrollWidth,cw=sc.clientWidth;
+    if(maxL>0)sc.scrollLeft=maxL?(l/maxL)*(sw-cw):0;
+  }
+  if(hthumb&&hsc){
+    hthumb.addEventListener('mousedown',function(e){e.preventDefault();hDragging=true;hsc.classList.add('dragging');setFromX(e.clientX)});
+    hsc.addEventListener('mousedown',function(e){if(e.target!==hthumb){e.preventDefault();setFromX(e.clientX)}});
+  }
+  document.addEventListener('mousemove',function(e){if(hDragging)setFromX(e.clientX)});
+  document.addEventListener('mouseup',function(){if(hDragging){hDragging=false;if(hsc)hsc.classList.remove('dragging')}});
+  if(sc)sc.addEventListener('scroll',syncHScroll);
+  if(harrL)harrL.addEventListener('click',function(){if(sc){sc.scrollLeft-=80;syncHScroll()}});
+  if(harrR)harrR.addEventListener('click',function(){if(sc){sc.scrollLeft+=80;syncHScroll()}});
+  window.addEventListener('resize',syncHScroll);
+
   /* --- 3. Заполнение фильтра «Площадка», если он пуст --- */
   function fixPlatformFilter(){
     var sel=document.getElementById('fLay');if(!sel)return;
@@ -442,10 +502,11 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
   enhance();
   fixPlatformFilter();
   afterRender();
+  syncHScroll();
   var timer=null;
   new MutationObserver(function(){
     clearTimeout(timer);
-    timer=setTimeout(function(){enhance();fixPlatformFilter();afterRender()},20);
+    timer=setTimeout(function(){enhance();fixPlatformFilter();afterRender();syncHScroll()},20);
   }).observe(document.getElementById('tab'),{childList:true,subtree:true});
 })();
 </script>
