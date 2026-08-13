@@ -89,16 +89,18 @@ body:has(#showAll:checked) #tab .hidden-col{display:table-cell}
 .tbl-scroll::-webkit-scrollbar-track{background:#F3F3F3}
 .tbl-scroll::-webkit-scrollbar-thumb{background:#C9C9C9;border-radius:4px}
 /* Кастомный видимый скроллбар таблицы (Windows 11 прячет системные до взаимодействия) */
-.tbl-hscroll{display:none;height:16px;background:#F3F3F3;border:1px solid var(--border);border-top:0;border-radius:0 0 10px 10px;position:relative;cursor:pointer;z-index:5;user-select:none;-webkit-user-select:none}
+.tbl-hscroll{display:none;height:18px;background:#E9E9E9;border:1px solid var(--border);border-top:0;border-radius:0 0 10px 10px;position:relative;cursor:default;z-index:5;user-select:none;-webkit-user-select:none}
 .tbl-hscroll.on{display:block}
-.tbl-harrow{position:absolute;top:0;bottom:0;width:24px;display:flex;align-items:center;justify-content:center;color:#777;font-size:16px;font-weight:700;background:#ECECEC}
-.tbl-harrow:hover{background:#DDDDDD;color:#333}
+.tbl-harrow{position:absolute;top:0;bottom:0;width:28px;display:flex;align-items:center;justify-content:center;color:#555;font-size:18px;font-weight:800;background:#DCDCDC;cursor:pointer}
+.tbl-harrow:hover{background:#C8C8C8;color:#E4003A}
 .tbl-harrow.left{left:0;border-right:1px solid var(--border);border-radius:0 0 0 10px}
 .tbl-harrow.right{right:0;border-left:1px solid var(--border);border-radius:0 0 10px 0}
-.tbl-hbar{position:relative;height:100%;margin:0 25px;cursor:pointer}
-.tbl-hthumb{position:absolute;top:2px;bottom:2px;left:0;width:80px;min-width:36px;background:#C9C9C9;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);cursor:grab;transition:background .15s}
-.tbl-hthumb:hover{background:#A8A8A8}
-.tbl-hscroll.dragging .tbl-hthumb{background:#8F8F8F;cursor:grabbing}
+.tbl-hbar{position:relative;height:100%;margin:0 29px;cursor:default}
+.tbl-hthumb{position:absolute;top:2px;bottom:2px;left:0;width:80px;min-width:40px;background:#A6A6A6;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1);cursor:grab;transition:background .15s}
+.tbl-hthumb:hover{background:#888888}
+.tbl-hscroll.dragging .tbl-hthumb{background:#6E6E6E;cursor:grabbing}
+/* Клик по шапке таблицы отключен — сортировка только через выпадающий список */
+#tab th{cursor:default!important}
 /* Страница не скроллится по горизонтали — весь горизонтальный скролл остаётся внутри таблицы */
 html,body{max-width:100%;overflow-x:hidden}
 #tab{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;border-radius:0;overflow:visible}
@@ -384,6 +386,13 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
   var hthumb=document.querySelector('.tbl-hthumb');
   var harrL=document.querySelector('.tbl-harrow.left');
   var harrR=document.querySelector('.tbl-harrow.right');
+  /* Клик по шапке отключен: перехват в фазе capture + data-sort удаляется при каждой отрисовке */
+  var tabEl=document.getElementById('tab');
+  if(tabEl){
+    tabEl.addEventListener('click',function(e){
+      if(e.target.closest&&e.target.closest('th')){e.stopPropagation();e.preventDefault()}
+    },true);
+  }
   function syncHScroll(){
     if(!sc||!hsc||!hbar||!hthumb)return;
     var cw=sc.clientWidth,sw=sc.scrollWidth;
@@ -451,7 +460,10 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
         if(HIDDEN.indexOf(i)>=0)cells[i].classList.add('hidden-col');
         else cells[i].classList.remove('hidden-col');
       }
-      if(isHead)continue;
+      if(isHead){
+        for(i=0;i<cells.length;i++){cells[i].removeAttribute('data-sort');cells[i].style.cursor='default'}
+        continue;
+      }
       var rec=findRec(tr),tds=tr.children;
       /* Дедлайн 3-7 дней → оранжевый (0-2 дня уже помечены .soon скриптом страницы) */
       if(tds[8]){var dl=daysTo((tds[8].textContent||'').trim());tds[8].classList.remove('dl-mid');if(dl>=3&&dl<=7)tds[8].classList.add('dl-mid')}
@@ -499,15 +511,23 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
     if(sortBy.value!=='date-desc'&&!hasArrow(h))applySort();
   }
 
-  enhance();
-  fixPlatformFilter();
-  afterRender();
-  syncHScroll();
+  /* --- Единый проход после каждой перерисовки: сброс скролла влево + пересчёт полосы --- */
+  function safeRun(){
+    try{enhance()}catch(e){}
+    try{fixPlatformFilter()}catch(e){}
+    try{afterRender()}catch(e){}
+    if(sc)sc.scrollLeft=0;
+    try{syncHScroll()}catch(e){}
+  }
+  safeRun();
   var timer=null;
   new MutationObserver(function(){
     clearTimeout(timer);
-    timer=setTimeout(function(){enhance();fixPlatformFilter();afterRender();syncHScroll()},20);
+    timer=setTimeout(safeRun,20);
   }).observe(document.getElementById('tab'),{childList:true,subtree:true});
+  window.addEventListener('pageshow',function(){setTimeout(safeRun,0);setTimeout(safeRun,300)});
+  window.addEventListener('load',function(){setTimeout(safeRun,0);setTimeout(safeRun,500)});
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){setTimeout(safeRun,50)});
 })();
 </script>
 </body>
