@@ -174,9 +174,9 @@ html,body{max-width:100%;overflow-x:hidden}
 
 /* Причина — обрезка до 2-3 слов с многоточием */
 #tab td:nth-child(20){max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* Комментарии — максимум 3 строки (только для непустых; пустые — без высокого блока) */
-#tab td:nth-child(30){max-width:220px;word-break:break-word}
-#tab td:nth-child(30):not(:empty){white-space:normal;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+/* Комментарии — как «Название»: clamp через внутренний div, пустые ячейки компактные */
+#tab td:nth-child(30){max-width:240px;word-break:break-word;vertical-align:top}
+.comment-clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 </style>
 </head>
 <body>
@@ -584,7 +584,7 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
       if(rec){
         if(tds[19]&&(tds[19].textContent||'').trim())tds[19].setAttribute('title',(tds[19].textContent||'').trim());
         if(tds[20]&&(tds[20].textContent||'').trim())tds[20].setAttribute('title',(tds[20].textContent||'').trim());
-        if(tds[29]&&(rec['Комметарии']||'').trim())tds[29].setAttribute('title',rec['Комметарии']);
+        if(tds[29]){var ct=(((rec&&rec['Комметарии'])||tds[29].textContent)||'').trim();if(ct&&!tds[29].querySelector('.comment-clamp')){var cd=document.createElement('div');cd.className='comment-clamp';cd.textContent=ct;tds[29].innerHTML='';tds[29].appendChild(cd)}if(ct)tds[29].setAttribute('title',ct)}
       }
     }
   }
