@@ -179,10 +179,41 @@ html,body{max-width:100%;overflow-x:hidden}
 .comment-clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 /* Подсказка для полного комментария при наведении */
 #tip{display:none;position:fixed;z-index:99999;max-width:420px;max-height:260px;overflow:auto;background:#FFFFFF;border:1px solid #D9D9D9;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:10px 12px;font-size:12px;line-height:1.55;color:#3C3C3B;pointer-events:none;white-space:normal;word-break:break-word}
+/* ===== Экран входа ===== */
+#loginScreen{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#E4003A 0%,#C20032 100%);font-family:'Montserrat','Segoe UI',Arial,sans-serif}
+#loginScreen .login-card{background:#fff;border-radius:16px;padding:36px 34px;width:340px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center}
+#loginScreen .login-logo{width:72px;height:72px;object-fit:contain;margin-bottom:16px}
+#loginScreen h2{margin:0 0 6px;color:var(--black);font-size:22px;font-weight:800;letter-spacing:.5px}
+#loginScreen .login-sub{color:#999;font-size:13px;margin:0 0 24px}
+#loginScreen label{display:block;text-align:left;font-size:11px;font-weight:700;color:#8A8A8A;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px}
+#loginScreen input[type=text],#loginScreen input[type=password]{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s;box-sizing:border-box;background:#fff}
+#loginScreen input[type=text]:focus,#loginScreen input[type=password]:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(228,0,58,.12)}
+#loginScreen .login-btn{width:100%;margin-top:22px;padding:12px;border:0;border-radius:10px;background:var(--red);color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:opacity .15s;letter-spacing:.3px}
+#loginScreen .login-btn:hover{opacity:.85}
+#loginScreen .login-err{display:none;color:var(--red);font-size:13px;font-weight:600;margin-top:14px;background:#FDECEF;border:1px solid #F5C6D0;border-radius:8px;padding:8px 10px}
+#loginScreen .login-err.show{display:block}
+#loginScreen .login-hint{margin-top:16px;font-size:11.5px;color:#B5B5B5;line-height:1.6}
+#app{display:none}
+#app.visible{display:block}
 </style>
 </head>
 <body>
-<div class="wrap">
+<!-- ===== Экран входа ===== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <img src="ino-mini.png" class="login-logo" alt="Иностудио">
+    <h2>Реестр тендеров</h2>
+    <p class="login-sub">Вход для сотрудников</p>
+    <label for="loginUser">Логин</label>
+    <input type="text" id="loginUser" autocomplete="username" placeholder="Введите логин">
+    <label for="loginPass">Пароль</label>
+    <input type="password" id="loginPass" autocomplete="current-password" placeholder="Введите пароль">
+    <button class="login-btn" id="loginBtn">Войти</button>
+    <div class="login-err" id="loginErr">Неверный логин или пароль</div>
+    <div class="login-hint">Доступ ограничен.<br>Введите учётные данные для продолжения.</div>
+  </div>
+</div>
+<div class="wrap" id="app">
 <div class="head">
 <h1>Реестр тендеров</h1>
 <img src="ino-mini.png" class="logo" alt="Иностудио">
@@ -636,6 +667,67 @@ function imp(e){var f=e.target.files[0],fr=new FileReader();fr.onload=function()
   window.addEventListener('pageshow',function(){setTimeout(safeRun,0);setTimeout(safeRun,300)});
   window.addEventListener('load',function(){setTimeout(safeRun,0);setTimeout(safeRun,500)});
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){setTimeout(safeRun,50)});
+})();
+</script>
+<script>
+/* ===== Авторизация: экран входа с логином и паролем ===== */
+(function(){
+  'use strict';
+  var LOGIN='RRY';
+  /* SHA-256 от пароля 4V!GhKAYugEiYzs — пароль в коде не хранится, только его хэш */
+  var PASS_HASH='f83b84647fe4cba07537780966d54317ddfc786408c5c9bd373aff9de6c5c1a1';
+  var AUTH_KEY='tenders_auth';
+
+  function sha256(str){
+    if(window.crypto&&crypto.subtle&&crypto.subtle.digest){
+      return crypto.subtle.digest('SHA-256',new TextEncoder().encode(str)).then(function(buf){
+        return Array.prototype.map.call(new Uint8Array(buf),function(b){return('0'+b.toString(16)).slice(-2)}).join('');
+      });
+    }
+    /* Фолбэк только для очень старых браузеров (не используется в современных) */
+    return Promise.resolve('');
+  }
+
+  function showErr(){
+    var e=document.getElementById('loginErr');
+    if(e){e.classList.add('show');setTimeout(function(){e.classList.remove('show')},2500)}
+  }
+
+  function unlock(){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').classList.add('visible');
+    try{sessionStorage.setItem(AUTH_KEY,'1')}catch(e){}
+    setTimeout(function(){
+      try{document.getElementById('loginUser').focus()}catch(e){}
+    },50);
+  }
+
+  function tryLogin(){
+    var u=document.getElementById('loginUser').value.trim();
+    var p=document.getElementById('loginPass').value;
+    sha256(p).then(function(h){
+      if(u===LOGIN&&h===PASS_HASH){
+        unlock();
+      }else{
+        document.getElementById('loginPass').value='';
+        showErr();
+      }
+    });
+  }
+
+  document.getElementById('loginBtn').addEventListener('click',tryLogin);
+  document.getElementById('loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')tryLogin()});
+  document.getElementById('loginUser').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('loginPass').focus()});
+
+  /* Восстановление сессии в рамках вкладки; блокировка правого клика/выделения на экране входа */
+  var authed=false;
+  try{authed=sessionStorage.getItem(AUTH_KEY)==='1'}catch(e){}
+  if(authed){
+    unlock();
+  }else{
+    document.getElementById('loginScreen').style.display='flex';
+  }
+  document.addEventListener('contextmenu',function(e){if(e.target.closest&&e.target.closest('#loginScreen'))e.preventDefault()});
 })();
 </script>
 </body>
